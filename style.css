@@ -125,3 +125,11 @@
  .explore-note-b{right:3%;bottom:10%}
  .explore-note strong{font-size:12px}
 }
+/* Header CTA: mobile sizing and true optical centering */
+@media(max-width:650px){
+ .header .button-small{height:48px;min-height:48px;min-width:184px;padding:0 12px;font-size:12px;line-height:1.2;align-items:center;justify-content:center}
+ .header .button-small>span{position:static;display:block;line-height:1.2;text-align:center}
+}
+@media(max-width:380px){
+ .header .button-small{height:46px;min-height:46px;min-width:168px;padding:0 10px;font-size:11px}
+}
