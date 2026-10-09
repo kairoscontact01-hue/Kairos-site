@@ -166,4 +166,14 @@
  .explore-note strong{font-size:11px}
  .hero .micro{margin-top:16px}
 }
-@media(max-width:380px){.header .button-small,.hero-copy>.button{width:168px;min-width:168px;height:46px;min-height:46px;font-size:10px}}
+@media(max-width:380px){.header .button-small,.hero-copy>.button{width:168px;min-width:168px;height:46px;min-height:46px;font-size:10px}}/* Panneaux de parcours : présentation nette, sans effet post-it */
+.illustration{height:156px;position:relative;overflow:hidden}
+.pathway-board{position:absolute;inset:8px 5% 10px;padding:14px 15px;background:#fffefb;border:1px solid #dce2d8;border-left:5px solid var(--sage);display:flex;flex-direction:column;justify-content:space-between;text-align:left}
+.explore-art .pathway-board{border-left-color:var(--coral);background:#fffaf6}
+.board-label{font:700 8px/1.2 var(--sans);letter-spacing:1.15px;color:#78867d}
+.pathway-board>strong{font:600 15px/1.2 var(--display);color:var(--green)}
+.board-steps{display:flex;align-items:center;gap:7px}
+.board-steps span{flex:0 0 auto;padding:6px 8px;background:#e9eee5;color:#51665b;font:700 7px/1.2 var(--sans);letter-spacing:.45px;white-space:nowrap}
+.explore-art .board-steps span:last-child{background:#f5e5dc;color:#855b4e}
+.board-steps i{height:1px;min-width:12px;flex:1;background:#df765f}
+@media(max-width:650px){.illustration{height:142px}.pathway-board{inset:7px 2% 8px;padding:12px}.pathway-board>strong{font-size:14px}.board-steps{gap:5px}.board-steps span{padding:6px 6px;font-size:6.5px}}
