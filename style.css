@@ -194,3 +194,15 @@
 .pathway>a{display:inline-flex;align-items:center;min-height:40px;color:var(--green);border-bottom:1px solid var(--coral);font-size:11px}
 @media(max-width:650px){.pathway{padding:18px}.illustration{height:132px;margin:15px 0 17px;grid-template-columns:1fr 33%}.scene-main{padding:12px 14px}.scene-main>strong{font-size:26px}.scene-end{font-size:12px;padding:8px}.pathway h3{font-size:20px}}
 @media(max-width:370px){.scene-main>strong{font-size:23px}.scene-main>span{font-size:7px}.scene-end{font-size:11px}}
+/* Proportions ajustées pour les cartes parcours */
+.pathway-grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:18px;margin-top:30px}
+.pathway{min-width:0;padding:21px 22px;display:flex;flex-direction:column}
+.illustration{height:108px;min-height:108px;margin:13px 0 16px;grid-template-columns:minmax(0,1fr) 27%}
+.scene-main{padding:10px 14px}
+.scene-main>span{font-size:7px;letter-spacing:1px}
+.scene-main>strong{margin-top:7px;font-size:24px;letter-spacing:-1px}
+.scene-end{font-size:11px;line-height:1.35;padding:8px}
+.pathway h3{font-size:19px;line-height:1.25;margin:0 0 8px}
+.pathway>p{font-size:11px;line-height:1.65;margin:0 0 8px;flex:1}
+.pathway>a{align-self:flex-start;min-height:34px;font-size:10px}
+@media(max-width:650px){.pathway-grid{grid-template-columns:1fr;gap:13px;margin-top:22px}.pathway{padding:17px 18px}.illustration{height:100px;min-height:100px;margin:11px 0 14px;grid-template-columns:minmax(0,1fr) 26%}.scene-main{padding:9px 12px}.scene-main>strong{font-size:22px}.scene-end{font-size:10px}.pathway h3{font-size:18px}.pathway>p{font-size:13px;line-height:1.6}}
