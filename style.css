@@ -177,3 +177,20 @@
 .explore-art .board-steps span:last-child{background:#f5e5dc;color:#855b4e}
 .board-steps i{height:1px;min-width:12px;flex:1;background:#df765f}
 @media(max-width:650px){.illustration{height:142px}.pathway-board{inset:7px 2% 8px;padding:12px}.pathway-board>strong{font-size:14px}.board-steps{gap:5px}.board-steps span{padding:6px 6px;font-size:6.5px}}
+/* Nouvelle direction artistique des parcours : composition éditoriale, sans post-it */
+.pathway{background:var(--paper);border:1px solid #e5e7df;padding:24px 25px;min-height:0}
+.pathway.idea{border-top:4px solid var(--sage)}
+.pathway.explore{border-top:4px solid var(--coral)}
+.illustration{height:150px;margin:18px 0 19px;display:grid;grid-template-columns:1fr 34%;align-items:stretch;overflow:hidden;background:#e9eee5}
+.idea-art{background:#e9eee5}
+.explore-art{background:#f5e9e1}
+.scene-main{display:flex;flex-direction:column;justify-content:center;padding:15px 19px}
+.scene-main>span{font:700 8px/1.2 var(--sans);letter-spacing:1.35px;color:#718078}
+.scene-main>strong{margin-top:11px;font:600 30px/1.05 var(--display);letter-spacing:-1.5px;color:var(--green)}
+.scene-end{display:flex;align-items:center;justify-content:center;padding:12px;text-align:center;background:var(--green);color:var(--ivory);font:500 13px/1.45 var(--display)}
+.explore-art .scene-end{background:var(--coral);color:#fffefa}
+.pathway h3{font-size:21px;margin-bottom:9px}
+.pathway>p{min-height:0;margin:0 0 12px}
+.pathway>a{display:inline-flex;align-items:center;min-height:40px;color:var(--green);border-bottom:1px solid var(--coral);font-size:11px}
+@media(max-width:650px){.pathway{padding:18px}.illustration{height:132px;margin:15px 0 17px;grid-template-columns:1fr 33%}.scene-main{padding:12px 14px}.scene-main>strong{font-size:26px}.scene-end{font-size:12px;padding:8px}.pathway h3{font-size:20px}}
+@media(max-width:370px){.scene-main>strong{font-size:23px}.scene-main>span{font-size:7px}.scene-end{font-size:11px}}
