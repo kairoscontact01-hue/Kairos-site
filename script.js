@@ -90,7 +90,15 @@
       const form = byId("profile-form");
       Object.entries(profile).forEach(([name, value]) => {
         const field = form?.elements.namedItem(name);
-        if (field && typeof value === "string") field.value = value;
+        if (!field) return;
+        if (field instanceof RadioNodeList && field.length && field[0].type === "checkbox") {
+          const selected = Array.isArray(value) ? value.map(String) : [];
+          Array.from(field).forEach((checkbox) => { checkbox.checked = selected.includes(checkbox.value); });
+        } else if (field.type === "checkbox") {
+          field.checked = Boolean(value);
+        } else if (typeof value === "string") {
+          field.value = value;
+        }
       });
       updateRoleFields();
       setStatus(byId("profile-status"), "Votre profil est enregistré.");
@@ -143,15 +151,40 @@
   function updateRoleFields() {
     const isInvestor = byId("role-select")?.value === "investor";
     byId("investor-fields").hidden = !isInvestor;
-    const amount = document.querySelector('[name="investmentRange"]');
-    if (amount) amount.disabled = !isInvestor;
+    byId("investor-fields").querySelectorAll("input,select,textarea").forEach((field) => { field.disabled = !isInvestor; });
     const arrField = document.querySelector('[name="arrondissement"]');
     if (arrField) arrField.disabled = byId("department-select").value !== "75";
     byId("arrondissement-field").hidden = byId("department-select").value !== "75";
+    const isParisSearch = document.querySelector('#discover-filters [name="department"]')?.value === "75";
+    byId("filter-arrondissement-field").hidden = !isParisSearch;
+    byId("filter-arrondissement-field").querySelector("select").disabled = !isParisSearch;
+    const showIntent = document.querySelector('[name="showInvestmentIntent"]')?.checked;
+    const publishAmount = document.querySelector('[name="showInvestmentAmount"]');
+    const amount = document.querySelector('[name="investmentAmount"]');
+    if (!showIntent && publishAmount) publishAmount.checked = false;
+    if (publishAmount) publishAmount.disabled = !isInvestor || !showIntent;
+    if (amount) amount.disabled = !isInvestor;
   }
 
   function formDataObject(form) {
-    return Object.fromEntries(new FormData(form).entries());
+    const data = Object.fromEntries(new FormData(form).entries());
+    form.querySelectorAll('input[type="checkbox"][name]').forEach((checkbox) => {
+      const named = form.querySelectorAll(`input[type="checkbox"][name="${CSS.escape(checkbox.name)}"]`);
+      if (named.length > 1) {
+        data[checkbox.name] = Array.from(named).filter((item) => item.checked).map((item) => item.value);
+      } else {
+        data[checkbox.name] = checkbox.checked;
+      }
+    });
+    if (data.role && data.role !== "investor") {
+      data.investmentRanges = [];
+      data.investmentSectors = "";
+      data.investmentProjectTypes = "";
+      data.investmentAmount = "";
+      data.showInvestmentIntent = false;
+      data.showInvestmentAmount = false;
+    }
+    return data;
   }
 
   async function saveProfile(event) {
@@ -185,18 +218,18 @@
     const top = document.createElement("div");
     top.className = "discovery-card-top";
     const name = document.createElement("h2");
-    name.textContent = profile.displayName || "Membre Kairos";
+    name.textContent = profile.projectTitle || profile.headline || profile.displayName || "Membre Kairos";
     const role = document.createElement("span");
     role.textContent = roleLabel(profile.role);
     top.append(name, role);
     const bio = document.createElement("p");
-    bio.textContent = profile.bio || "Ce membre n’a pas encore ajouté de présentation.";
+    bio.textContent = profile.projectDescription || profile.bio || "Ce membre n’a pas encore ajouté de présentation.";
     const place = document.createElement("p");
     place.className = "discovery-location";
     place.textContent = [profile.city, profile.department && `${profile.department} · Île-de-France`].filter(Boolean).join(" · ");
     const tags = document.createElement("div");
     tags.className = "discovery-tags";
-    [profile.skills, profile.sectors].filter(Boolean).join(", ").split(",").map((text) => text.trim()).filter(Boolean).slice(0, 5).forEach((text) => {
+    [profile.projectCategory, profile.projectStage, profile.skills, profile.sectors].filter(Boolean).join(", ").split(",").map((text) => text.trim()).filter(Boolean).slice(0, 5).forEach((text) => {
       const tag = document.createElement("span");
       tag.textContent = text;
       tags.append(tag);
@@ -329,6 +362,9 @@
 
   byId("role-select").addEventListener("change", updateRoleFields);
   byId("department-select").addEventListener("change", updateRoleFields);
+  document.querySelector('#discover-filters [name="department"]').addEventListener("change", updateRoleFields);
+  document.querySelector('[name="showInvestmentIntent"]').addEventListener("change", updateRoleFields);
+  document.querySelector('[name="showInvestmentAmount"]').addEventListener("change", updateRoleFields);
   byId("profile-form").addEventListener("submit", saveProfile);
   byId("waitlist-form").addEventListener("submit", submitWaitlist);
   byId("discover-filters").addEventListener("submit", (event) => {
