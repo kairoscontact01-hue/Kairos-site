@@ -72,11 +72,21 @@
     const haystack = normalize([p.displayName, p.headline, p.bio, p.skills, p.projectTitle, p.projectDescription, ...p.workFields].join(" "));
     return (!f.q || haystack.includes(normalize(f.q))) && (!f.role || p.role === f.role) && (!f.department || p.department === f.department) && (!f.workField || p.workFields.includes(f.workField));
   }
-  if (typeof module !== "undefined" && module.exports) module.exports = { cleanDraft, previewProfile, publicRecord, matchesFilters, validAge, safePhoto };
+  function clerkDomain(key) {
+    if (typeof key !== "string" || !/^pk_(test|live)_/.test(key)) return "";
+    try {
+      const encoded = key.split("_").slice(2).join("_").replace(/-/g, "+").replace(/_/g, "/");
+      const domain = atob(encoded).replace(/\$$/, "");
+      return domain.length <= 253 && /^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9-]+$/i.test(domain) ? domain : "";
+    } catch { return ""; }
+  }
+  if (typeof module !== "undefined" && module.exports) module.exports = { cleanDraft, previewProfile, publicRecord, matchesFilters, validAge, safePhoto, clerkDomain };
   if (typeof document === "undefined") return;
   const byId = (id) => document.getElementById(id);
   const page = document.body.dataset.page;
-  const apiBase = (document.querySelector('meta[name="kairos-api-base"]')?.content || "").replace(/\/$/, "");
+  const publicConfig = window.KAIROS_CONFIG || {};
+  const apiBase = (publicConfig.apiBase || document.querySelector('meta[name="kairos-api-base"]')?.content || "").replace(/\/$/, "");
+  let clerkClient = null;
   let toastTimer;
   function toast(message) { const box = byId("toast"); if (!box) return; box.textContent = message; box.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => box.classList.remove("show"), 5000); }
   function el(tag, className, value) { const node = document.createElement(tag); if (className) node.className = className; if (value !== undefined) node.textContent = value; return node; }
@@ -85,7 +95,12 @@
   function navigateToRegistration(role = "", plan = "") { const q = new URLSearchParams(); if (Object.hasOwn(ROLES, role)) q.set("role", role); if (Object.hasOwn(PLANS, plan)) q.set("offre", plan); location.href = `inscription.html${q.size ? `?${q}` : ""}`; }
   async function fetchJSON(path, options) {
     if (location.protocol === "file:" && !apiBase) throw new Error("not-connected");
-    const response = await fetch(`${apiBase}${path}`, { credentials: "same-origin", ...options });
+    const headers = new Headers(options?.headers || {});
+    if (clerkClient?.session) {
+      const token = await clerkClient.session.getToken();
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+    }
+    const response = await fetch(`${apiBase}${path}`, { credentials: "same-origin", ...options, headers });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("Unexpected response"); return response.json();
   }
@@ -110,11 +125,72 @@
     if (p.preview || !p.canLike) { like.disabled = true; like.title = "Les likes seront ouverts avec les comptes"; }
     bottom.append(like, el("span", "member-stage", p.preview ? "Aperçu privé" : "Sur liste d’attente")); content.append(tags, bottom); card.append(visual, content); return card;
   }
-  function initLanding() {
+  function initHeader() {
     const toggle = byId("menu-toggle"), nav = byId("main-nav");
     function close() { nav?.classList.remove("open"); toggle?.setAttribute("aria-expanded", "false"); toggle?.setAttribute("aria-label", "Ouvrir le menu"); }
     toggle?.addEventListener("click", () => { const open = toggle.getAttribute("aria-expanded") !== "true"; toggle.setAttribute("aria-expanded", String(open)); toggle.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu"); nav.classList.toggle("open", open); });
     nav?.querySelectorAll("a").forEach((link) => link.addEventListener("click", close)); document.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
+    const params = new URLSearchParams(location.search);
+    if (byId("header-query")) byId("header-query").value = params.get("q") || "";
+    byId("header-search")?.addEventListener("submit", (event) => {
+      event.preventDefault(); const query = byId("header-query").value.trim();
+      location.href = `profils.html${query ? `?q=${encodeURIComponent(query)}` : ""}`;
+    });
+    nav?.querySelectorAll("a").forEach((link) => { if (page === "directory" && link.getAttribute("href") === "profils.html") link.setAttribute("aria-current", "page"); });
+    return close;
+  }
+  async function initAccounts() {
+    const key = typeof publicConfig.clerkPublishableKey === "string" ? publicConfig.clerkPublishableKey.trim() : "";
+    if (!key) return;
+    const domain = clerkDomain(key);
+    if (!domain) { console.warn("Clerk: la clé publique de config.js est invalide."); return; }
+    const loadScript = (src, publishableKey) => new Promise((resolve, reject) => {
+      const script = document.createElement("script"); script.src = src; script.async = true; script.crossOrigin = "anonymous";
+      if (publishableKey) script.dataset.clerkPublishableKey = publishableKey;
+      script.onload = resolve; script.onerror = reject; document.head.append(script);
+    });
+    try {
+      await loadScript(`https://${domain}/npm/@clerk/ui@1/dist/ui.browser.js`);
+      await loadScript(`https://${domain}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, key);
+      if (!window.Clerk || !window.__internal_ClerkUICtor) throw new Error("Clerk SDK unavailable");
+      clerkClient = window.Clerk;
+      await clerkClient.load({ ui: { ClerkUI: window.__internal_ClerkUICtor }, appearance: { variables: { colorPrimary: getComputedStyle(document.documentElement).getPropertyValue("--ink").trim(), borderRadius: "2px" } } });
+      document.querySelector(".site-header")?.classList.add("accounts-enabled");
+      const panel = byId("account-connection"), userButton = byId("clerk-user-button");
+      let mounted = false;
+      function syncAccount() {
+        const user = clerkClient.user;
+        document.querySelectorAll(".header-account").forEach((button) => { button.hidden = Boolean(user); });
+        if (userButton) {
+          userButton.hidden = !user;
+          if (user && !mounted) { clerkClient.mountUserButton(userButton); mounted = true; }
+          if (!user && mounted) { clerkClient.unmountUserButton(userButton); mounted = false; }
+        }
+        if (panel) {
+          panel.hidden = false; panel.querySelector(".account-actions").hidden = Boolean(user);
+          byId("account-status").textContent = user ? `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Vous pouvez compléter votre fiche de préinscription.` : "Créez votre compte sécurisé ou connectez-vous avant de préparer votre fiche.";
+          const form = byId("registration-form");
+          if (user && form) {
+            const values = { firstName: user.firstName, lastName: user.lastName, email: user.primaryEmailAddress?.emailAddress };
+            Object.entries(values).forEach(([name, value]) => { const input = form.elements.namedItem(name); if (input && !input.value && value) input.value = value; });
+            form.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          const introduction = document.querySelector(".registration-intro > p:last-child");
+          if (introduction) introduction.textContent = "Préparez votre fiche pour Kairos. La création d’un compte ne confirme pas l’envoi de votre préinscription et ne déclenche aucun paiement.";
+        }
+      }
+      clerkClient.addListener(syncAccount); syncAccount();
+      document.querySelectorAll("[data-account]").forEach((button) => button.addEventListener("click", () => {
+        closeHeader();
+        if (button.dataset.account === "sign-up") clerkClient.openSignUp(); else clerkClient.openSignIn();
+      }));
+    } catch {
+      clerkClient = null;
+      console.warn("Clerk n’a pas pu démarrer. Vérifiez config.js et les domaines autorisés de votre application.");
+    }
+  }
+  function initLanding() {
+    const close = closeHeader;
     function audience(name, focus) { document.querySelectorAll("[data-audience]").forEach((tab) => { const selected = tab.dataset.audience === name; tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1; byId(tab.getAttribute("aria-controls")).hidden = !selected; if (focus && selected) tab.focus(); }); }
     document.querySelectorAll("[data-audience]").forEach((tab, index, tabs) => {
       tab.addEventListener("click", () => audience(tab.dataset.audience));
@@ -211,7 +287,16 @@
   async function initDirectory() {
     let profiles = [], onlyFavorites = false, available = false;
     const filters = byId("directory-filters");
-    function filterValues() { return Object.fromEntries(new FormData(filters).entries()); }
+    const params = new URLSearchParams(location.search);
+    filters.elements.q.value = (params.get("q") || "").slice(0, 120);
+    onlyFavorites = params.get("favoris") === "1";
+    byId("show-favorites").setAttribute("aria-pressed", String(onlyFavorites));
+    function filterValues() {
+      const values = Object.fromEntries(new FormData(filters).entries());
+      values.q = byId("header-query")?.value.trim() || "";
+      filters.elements.q.value = values.q;
+      return values;
+    }
     function render() {
       const values = filterValues(); const shown = profiles.filter((p) => matchesFilters(p, values) && (!onlyFavorites || favoriteIds.has(p.id)));
       byId("directory-results").replaceChildren(); byId("favorite-count").textContent = favoriteIds.size;
@@ -222,7 +307,7 @@
     }
     const local = storedDraft(); if (local) { byId("private-draft-section").hidden = false; byId("private-draft-card").append(makeCard(previewProfile(local))); }
     filters.addEventListener("submit", (event) => { event.preventDefault(); render(); }); filters.addEventListener("change", render);
-    let timer; filters.elements.q.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 180); });
+    let timer; byId("header-query")?.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 180); });
     byId("show-favorites").addEventListener("click", (event) => { onlyFavorites = !onlyFavorites; event.currentTarget.setAttribute("aria-pressed", String(onlyFavorites)); render(); });
     function openProfile(p) {
       const detail = byId("member-detail"); detail.replaceChildren(makeCard({ ...p, preview: true }));
@@ -243,7 +328,9 @@
     try { const result = await fetchJSON("/api/waitlist/profiles"); if (!Array.isArray(result.profiles)) throw new Error("Invalid directory"); profiles = result.profiles.map(publicRecord).filter(Boolean); available = true; render(); } catch { render(); }
   }
   fillCatalogs();
+  const closeHeader = initHeader();
   if (page === "landing") initLanding();
   if (page === "registration") initRegistration();
   if (page === "directory") initDirectory();
+  initAccounts();
 })();
