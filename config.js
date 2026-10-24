@@ -2,7 +2,7 @@
 window.KAIROS_CONFIG = Object.freeze({
   // Facultatif : clé PUBLIQUE Clerk, commençant par pk_test_ ou pk_live_.
   // Laisser vide pour conserver la préinscription sans compte pour le moment.
-  clerkPublishableKey: "",
+  clerkPublishableKey: "pk_test_YWJvdmUtZXNjYXJnb3QtMTIzMi5jbGVyay5hY2NvdW50cy5kZXYk",
 
   // Laisser vide si les routes /api/ sont hébergées dans le même projet Vercel.
   // Sinon, indiquer uniquement l’origine HTTPS de votre serveur.
