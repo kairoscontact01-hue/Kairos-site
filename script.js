@@ -1,387 +1,249 @@
 (() => {
   "use strict";
-
-  const API = {
-    profile: "/api/profiles/me",
-    discovery: "/api/discovery",
-    favorites: "/api/favorites",
-    waitlist: "/api/waitlist",
-    interaction: (id) => `/api/profiles/${encodeURIComponent(id)}/interactions`,
+  const CATALOGS = {
+    statuses: ["Étudiant·e", "Salarié·e", "Indépendant·e", "Entrepreneur·se", "En reconversion", "En recherche d’activité", "Autre"],
+    education: ["Sans diplôme / parcours autodidacte", "CAP / BEP", "Baccalauréat", "Bac +2 / BTS / BUT en cours", "Licence / Bachelor / BUT", "Master / Bac +5", "Doctorat", "Autre parcours"],
+    studyFields: ["Informatique & numérique", "Commerce & gestion", "Marketing & communication", "Design & création", "Finance & comptabilité", "Droit & sciences politiques", "Ingénierie & sciences", "Santé & social", "Éducation & sciences humaines", "Environnement & agriculture", "Artisanat & métiers manuels", "Autre / autodidacte"],
+    experience: ["Je débute", "Moins de 2 ans", "2 à 5 ans", "6 à 10 ans", "Plus de 10 ans"],
+    availability: ["Quelques heures par semaine", "Un à deux jours par semaine", "Temps partiel", "Temps plein", "À définir ensemble"],
+    workFields: ["Développement informatique", "Data & intelligence artificielle", "Design & UX/UI", "Commerce & vente", "Marketing & communication", "Gestion de produit", "Finance & comptabilité", "Stratégie & gestion", "Droit & administration", "Ingénierie & industrie", "Santé & bien-être", "Environnement & climat", "Éducation & formation", "Culture & création", "Artisanat", "Opérations & logistique", "Autre domaine"],
+    sectors: ["Technologie & numérique", "Éducation & formation", "Santé & bien-être", "Environnement & climat", "Alimentation & agriculture", "Commerce & services", "Culture & médias", "Finance & assurance", "Industrie & mobilité", "Économie sociale & solidaire", "Autre secteur", "Je suis encore en exploration"],
+    stages: ["J’explore une idée", "Je valide un besoin", "Je développe un prototype", "J’ai de premiers clients", "Mon activité est lancée", "Je cherche un projet à rejoindre", "Je souhaite investir ou accompagner"],
+    collaborations: ["Association / cofondation", "Collaboration à temps partiel", "Collaboration à temps plein", "Partenariat ponctuel", "Mission rémunérée", "Investissement & accompagnement", "Ouvert·e à en discuter"],
+    lookingFor: ["Un associé / une associée", "Un profil technique / développeur", "Un profil commercial", "Un profil design / créatif", "Un investisseur", "Un partenaire", "Une équipe à rejoindre", "Ouvert·e à plusieurs profils"],
+    departments: [["75", "75 · Paris"], ["77", "77 · Seine-et-Marne"], ["78", "78 · Yvelines"], ["91", "91 · Essonne"], ["92", "92 · Hauts-de-Seine"], ["93", "93 · Seine-Saint-Denis"], ["94", "94 · Val-de-Marne"], ["95", "95 · Val-d’Oise"]],
+    arrondissements: Array.from({ length: 20 }, (_, i) => `${i + 1}${i ? "e" : "er"} arrondissement`),
+    investmentRanges: ["Moins de 10 000 €", "10 000 € à 50 000 €", "50 000 € à 150 000 €", "Plus de 150 000 €", "À définir"],
   };
-
+  const ROLES = { founder: "Apporteur d’idée", partner: "Futur associé", investor: "Investisseur", member: "Membre Kairos" };
+  const PLANS = { student: "Premium étudiant — 3,99 € / 4 semaines", classic: "Premium classique — 9,99 € / 4 semaines", vip: "Premium VIP — 19,99 € / 4 semaines" };
+  const DRAFT_KEY = "kairos.preinscription.v1";
+  const FAVORITES_KEY = "kairos.favorites.v1";
+  const MAX_PHOTO_BYTES = 1024 * 1024;
+  const text = (value, max = 1500) => typeof value === "string" ? value.trim().slice(0, max) : "";
+  const normalize = (value) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const list = (value, allowed) => Array.isArray(value) ? [...new Set(value.filter((item) => typeof item === "string" && (!allowed || allowed.includes(item))))].slice(0, 500) : [];
+  const validAge = (value) => /^\d{1,3}$/.test(String(value)) && Number(value) >= 1 && Number(value) <= 120;
+  function safePhoto(value) {
+    const photo = text(value, MAX_PHOTO_BYTES * 2);
+    if (/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(photo) && photo.length <= Math.ceil(MAX_PHOTO_BYTES * 4 / 3) + 60) return photo;
+    try { const url = new URL(photo); return url.protocol === "https:" && !url.username && !url.password ? url.href : ""; } catch { return ""; }
+  }
+  function cleanDraft(raw = {}) {
+    const d = {};
+    ["firstName", "lastName", "email", "headline", "bio", "professionalStatus", "educationLevel", "studyField", "school", "experience", "availability", "skills", "projectCategory", "projectStage", "projectTitle", "projectDescription", "collaborationType", "lookingFor", "city", "arrondissement", "investmentSectors", "investmentProjectTypes", "investmentAmount"].forEach((key) => { d[key] = text(raw[key]); });
+    d.firstName = d.firstName.slice(0, 60); d.lastName = d.lastName.slice(0, 80); d.email = d.email.slice(0, 254);
+    d.role = ["founder", "partner", "investor"].includes(raw.role) ? raw.role : "";
+    d.age = validAge(raw.age) ? Number(raw.age) : ""; d.region = "ile-de-france";
+    d.department = CATALOGS.departments.some(([value]) => value === raw.department) ? raw.department : "";
+    if (d.department !== "75") d.arrondissement = "";
+    d.workFields = list(raw.workFields, CATALOGS.workFields);
+    d.investmentRanges = d.role === "investor" ? list(raw.investmentRanges, CATALOGS.investmentRanges) : [];
+    ["showAge", "publicConsent", "consent"].forEach((key) => { d[key] = raw[key] === true; });
+    d.showInvestmentIntent = d.role === "investor" && raw.showInvestmentIntent === true;
+    d.showInvestmentAmount = d.showInvestmentIntent && raw.showInvestmentAmount === true;
+    if (d.role !== "investor") ["investmentSectors", "investmentProjectTypes", "investmentAmount"].forEach((key) => { d[key] = ""; });
+    d.photoUrl = safePhoto(raw.photoUrl); d.plan = Object.hasOwn(PLANS, raw.plan) ? raw.plan : ""; return d;
+  }
+  // Public cards never receive contact details, the full surname, school, or private investment preferences.
+  function previewProfile(raw) {
+    const d = cleanDraft(raw);
+    const p = { id: "private-preview", preview: true,
+      displayName: d.firstName ? `${d.firstName}${d.lastName ? ` ${Array.from(d.lastName)[0]}.` : ""}` : "Votre prénom",
+      role: d.role === "investor" && !d.showInvestmentIntent ? "member" : d.role || "member",
+      age: d.showAge ? d.age : "", photoUrl: d.photoUrl,
+      headline: d.headline, bio: d.bio, education: [d.educationLevel, d.studyField].filter(Boolean).join(" · "),
+      professionalStatus: d.professionalStatus, experience: d.experience, availability: d.availability,
+      workFields: d.workFields, skills: d.skills, city: d.city, department: d.department,
+      projectTitle: d.projectTitle, projectCategory: d.projectCategory, projectStage: d.projectStage,
+      projectDescription: d.projectDescription, collaborationType: d.collaborationType, lookingFor: d.lookingFor };
+    if (d.showInvestmentIntent) { p.investmentSectors = d.investmentSectors; p.investmentProjectTypes = d.investmentProjectTypes; if (d.showInvestmentAmount) { p.investmentAmount = d.investmentAmount; p.investmentRanges = d.investmentRanges; } }
+    return p;
+  }
+  // Future API: each public record must be published AND explicitly consented on the server.
+  function publicRecord(raw) {
+    if (!raw || raw.published !== true || raw.publicConsent !== true || typeof raw.id !== "string" || !raw.publicProfile) return null;
+    const p = raw.publicProfile;
+    const r = { id: raw.id.slice(0, 150), preview: false, role: Object.hasOwn(ROLES, p.role) ? p.role : "member", workFields: list(p.workFields, CATALOGS.workFields), photoUrl: safePhoto(p.photoUrl), likesCount: Number.isSafeInteger(raw.likesCount) && raw.likesCount >= 0 ? raw.likesCount : 0, canLike: raw.canLike === true };
+    ["displayName", "headline", "bio", "education", "professionalStatus", "experience", "availability", "skills", "city", "department", "projectTitle", "projectCategory", "projectStage", "projectDescription", "collaborationType", "lookingFor", "investmentSectors", "investmentProjectTypes", "investmentAmount"].forEach((key) => { r[key] = text(p[key]); });
+    r.age = validAge(p.age) ? Number(p.age) : ""; r.investmentRanges = list(p.investmentRanges, CATALOGS.investmentRanges); return r;
+  }
+  function matchesFilters(p, f) {
+    const haystack = normalize([p.displayName, p.headline, p.bio, p.skills, p.projectTitle, p.projectDescription, ...p.workFields].join(" "));
+    return (!f.q || haystack.includes(normalize(f.q))) && (!f.role || p.role === f.role) && (!f.department || p.department === f.department) && (!f.workField || p.workFields.includes(f.workField));
+  }
+  if (typeof module !== "undefined" && module.exports) module.exports = { cleanDraft, previewProfile, publicRecord, matchesFilters, validAge, safePhoto };
+  if (typeof document === "undefined") return;
   const byId = (id) => document.getElementById(id);
-  const toast = byId("toast");
-  let clerk = null;
+  const page = document.body.dataset.page;
+  const apiBase = (document.querySelector('meta[name="kairos-api-base"]')?.content || "").replace(/\/$/, "");
   let toastTimer;
-
-  function showToast(message) {
-    if (!toast) return;
-    toast.textContent = message;
-    toast.classList.add("show");
-    window.clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 4200);
+  function toast(message) { const box = byId("toast"); if (!box) return; box.textContent = message; box.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => box.classList.remove("show"), 5000); }
+  function el(tag, className, value) { const node = document.createElement(tag); if (className) node.className = className; if (value !== undefined) node.textContent = value; return node; }
+  function storageRead(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
+  function storedDraft() { const value = storageRead(DRAFT_KEY, null); return value?.version === 1 && value.profile ? cleanDraft(value.profile) : null; }
+  function navigateToRegistration(role = "", plan = "") { const q = new URLSearchParams(); if (Object.hasOwn(ROLES, role)) q.set("role", role); if (Object.hasOwn(PLANS, plan)) q.set("offre", plan); location.href = `inscription.html${q.size ? `?${q}` : ""}`; }
+  async function fetchJSON(path, options) {
+    if (location.protocol === "file:" && !apiBase) throw new Error("not-connected");
+    const response = await fetch(`${apiBase}${path}`, { credentials: "same-origin", ...options });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("Unexpected response"); return response.json();
   }
-
-  function setStatus(element, message, isError = false) {
-    if (!element) return;
-    element.textContent = message;
-    element.classList.toggle("error", isError);
+  function fillCatalogs() {
+    document.querySelectorAll("select[data-catalog]").forEach((select) => { (CATALOGS[select.dataset.catalog] || []).forEach((item) => { const [value, label] = Array.isArray(item) ? item : [item, item]; const option = el("option", "", label); option.value = value; select.append(option); }); });
+    document.querySelectorAll("[data-choice-catalog]").forEach((container) => { (CATALOGS[container.dataset.choiceCatalog] || []).forEach((value) => { const label = el("label", "skill-choice"); const input = el("input"); input.type = "checkbox"; input.name = container.dataset.choiceName; input.value = value; label.append(input, el("span", "", value)); container.append(label); }); });
   }
-
-  function clerkConfiguration() {
-    const key = document.querySelector('meta[name="clerk-publishable-key"]')?.content.trim();
-    const frontendApi = document.querySelector('meta[name="clerk-frontend-api"]')?.content.trim();
-    if (!key || !frontendApi || key.startsWith("__") || frontendApi.startsWith("__")) return null;
-    return { key, frontendApi: frontendApi.replace(/^https?:\/\//, "").replace(/\/$/, "") };
+  const favoriteIds = new Set(list(storageRead(FAVORITES_KEY, [])));
+  function saveFavorites() { try { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...favoriteIds])); return true; } catch { toast("Ce navigateur ne permet pas de conserver vos favoris sur cet appareil."); return false; } }
+  function makeCard(p) {
+    const card = el("article", `member-card member-card-${p.role}`); const visual = el("div", "member-visual");
+    if (p.photoUrl) { const img = el("img"); img.src = p.photoUrl; img.alt = `Photo de ${p.displayName}`; img.loading = "lazy"; img.addEventListener("error", () => { img.remove(); visual.prepend(el("span", "member-initials", Array.from(p.displayName || "V")[0])); }); visual.append(img); }
+    else visual.append(el("span", "member-initials", Array.from(p.displayName || "V")[0]));
+    visual.append(el("span", "member-role", ROLES[p.role] || ROLES.member));
+    const save = el("button", "member-save", "♡"); save.type = "button"; save.dataset.saveProfile = p.id; save.setAttribute("aria-label", p.preview ? "Favoris disponibles à l’ouverture" : `Enregistrer ${p.displayName}`); save.setAttribute("aria-pressed", String(!p.preview && favoriteIds.has(p.id)));
+    if (p.preview) { save.disabled = true; save.title = "Disponible à l’ouverture"; } else if (favoriteIds.has(p.id)) save.textContent = "♥";
+    visual.append(save); const content = el("div", "member-card-content");
+    const title = el(p.preview ? "h3" : "button", "member-name", p.displayName + (p.age ? `, ${p.age} ans` : "")); if (!p.preview) { title.type = "button"; title.dataset.openProfile = p.id; }
+    content.append(title, el("p", "member-city", [p.city, p.department].filter(Boolean).join(" · ") || "Ville à préciser"), el("p", "member-headline", p.headline || p.projectTitle || "Votre présentation en quelques mots"));
+    const tags = el("div", "member-tags"); (p.workFields.length ? p.workFields.slice(0, 3) : ["Compétences à préciser"]).forEach((skill) => tags.append(el("span", "", skill)));
+    const bottom = el("div", "member-card-bottom"); const like = el("button", "member-like", p.preview ? "♡ J’aime" : `♡ ${p.likesCount}`); like.type = "button"; like.dataset.likeProfile = p.id; like.setAttribute("aria-label", p.preview ? "Likes disponibles à l’ouverture" : `Aimer le profil de ${p.displayName}, ${p.likesCount} likes`);
+    if (p.preview || !p.canLike) { like.disabled = true; like.title = "Les likes seront ouverts avec les comptes"; }
+    bottom.append(like, el("span", "member-stage", p.preview ? "Aperçu privé" : "Sur liste d’attente")); content.append(tags, bottom); card.append(visual, content); return card;
   }
-
-  function loadClerkScript(config) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.defer = true;
-      script.crossOrigin = "anonymous";
-      script.dataset.clerkPublishableKey = config.key;
-      script.src = `https://${config.frontendApi}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`;
-      script.onload = resolve;
-      script.onerror = () => reject(new Error("Impossible de charger Clerk."));
-      document.head.append(script);
-    });
-  }
-
-  async function request(path, options = {}) {
-    if (!clerk?.session) throw new Error("Connectez-vous pour continuer.");
-    const token = await clerk.session.getToken();
-    const response = await fetch(path, {
-      ...options,
-      headers: {
-        ...(options.body ? { "Content-Type": "application/json" } : {}),
-        Authorization: `Bearer ${token}`,
-        ...options.headers,
-      },
-    });
-    if (!response.ok) {
-      const error = new Error(`La demande n’a pas abouti (${response.status}).`);
-      error.status = response.status;
-      throw error;
-    }
-    return response.status === 204 ? null : response.json();
-  }
-
-  function showWorkspace() {
-    const app = byId("app");
-    if (!app || !clerk?.user) return;
-    app.hidden = false;
-    document.querySelectorAll("body > header, body > main, body > footer").forEach((node) => { node.hidden = true; });
-    const firstName = clerk.user.firstName || clerk.user.username || "";
-    byId("app-greeting").textContent = firstName ? `Bonjour ${firstName}` : "Bienvenue sur Kairos";
-    const userButton = byId("clerk-user-button");
-    if (userButton && !userButton.dataset.mounted && clerk.mountUserButton) {
-      clerk.mountUserButton(userButton);
-      userButton.dataset.mounted = "true";
-    }
-    let requestedRole = "";
-    try { requestedRole = sessionStorage.getItem("kairos_requested_role") || ""; } catch { /* Storage may be blocked for local-file previews. */ }
-    if (requestedRole && byId("role-select")) {
-      byId("role-select").value = requestedRole;
-      try { sessionStorage.removeItem("kairos_requested_role"); } catch { /* Storage may be blocked for local-file previews. */ }
-    }
-    request(API.profile).then((profile) => {
-      if (!profile) return;
-      const form = byId("profile-form");
-      Object.entries(profile).forEach(([name, value]) => {
-        const field = form?.elements.namedItem(name);
-        if (!field) return;
-        if (field instanceof RadioNodeList && field.length && field[0].type === "checkbox") {
-          const selected = Array.isArray(value) ? value.map(String) : [];
-          Array.from(field).forEach((checkbox) => { checkbox.checked = selected.includes(checkbox.value); });
-        } else if (field.type === "checkbox") {
-          field.checked = Boolean(value);
-        } else if (typeof value === "string") {
-          field.value = value;
-        }
+  function initLanding() {
+    const toggle = byId("menu-toggle"), nav = byId("main-nav");
+    function close() { nav?.classList.remove("open"); toggle?.setAttribute("aria-expanded", "false"); toggle?.setAttribute("aria-label", "Ouvrir le menu"); }
+    toggle?.addEventListener("click", () => { const open = toggle.getAttribute("aria-expanded") !== "true"; toggle.setAttribute("aria-expanded", String(open)); toggle.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu"); nav.classList.toggle("open", open); });
+    nav?.querySelectorAll("a").forEach((link) => link.addEventListener("click", close)); document.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
+    function audience(name, focus) { document.querySelectorAll("[data-audience]").forEach((tab) => { const selected = tab.dataset.audience === name; tab.setAttribute("aria-selected", String(selected)); tab.tabIndex = selected ? 0 : -1; byId(tab.getAttribute("aria-controls")).hidden = !selected; if (focus && selected) tab.focus(); }); }
+    document.querySelectorAll("[data-audience]").forEach((tab, index, tabs) => {
+      tab.addEventListener("click", () => audience(tab.dataset.audience));
+      tab.addEventListener("keydown", (event) => { let next;
+        if (["ArrowDown", "ArrowRight"].includes(event.key)) next = (index + 1) % tabs.length;
+        else if (["ArrowUp", "ArrowLeft"].includes(event.key)) next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === "Home") next = 0; else if (event.key === "End") next = tabs.length - 1; else return;
+        event.preventDefault(); audience(tabs[next].dataset.audience, true);
       });
-      updateRoleFields();
-      setStatus(byId("profile-status"), "Votre profil est enregistré.");
-    }).catch((error) => {
-      if (error.status === 404) setStatus(byId("profile-status"), "Complétez votre profil. L’enregistrement sera disponible dès que le service de profils sera activé.");
-      else setStatus(byId("profile-status"), "Profil prêt à compléter. Le service de profils n’est pas encore disponible.");
     });
+    document.querySelectorAll("[data-register], [data-interest-plan]").forEach((control) => control.addEventListener("click", (event) => { event.preventDefault(); close(); navigateToRegistration(control.dataset.role, control.dataset.interestPlan); }));
   }
-
-  function showPublicSite() {
-    byId("app").hidden = true;
-    document.querySelectorAll("body > header, body > main, body > footer").forEach((node) => { node.hidden = false; });
-  }
-
-  async function initializeClerk() {
-    const config = clerkConfiguration();
-    if (!config) return;
-    try {
-      await loadClerkScript(config);
-      if (!window.Clerk) throw new Error("Clerk n’est pas disponible.");
-      clerk = window.Clerk;
-      await clerk.load();
-      clerk.addListener(({ user }) => user ? showWorkspace() : showPublicSite());
-      if (clerk.user) showWorkspace();
-    } catch (error) {
-      console.error("Clerk", error);
-      showToast("La connexion n’a pas pu être initialisée. Vérifiez la configuration Clerk.");
+  function initRegistration() {
+    const form = byId("registration-form"); form.noValidate = true;
+    const panels = [...form.querySelectorAll("[data-panel]")]; let step = 0, photoUrl = "", selectedPlan = "";
+    const params = new URLSearchParams(location.search);
+    if (Object.hasOwn(PLANS, params.get("offre"))) selectedPlan = params.get("offre");
+    if (["founder", "partner", "investor"].includes(params.get("role"))) form.querySelector(`[name="role"][value="${params.get("role")}"]`).checked = true;
+    function draft() {
+      const fd = new FormData(form); const value = Object.fromEntries(fd.entries()); value.workFields = fd.getAll("workFields"); value.investmentRanges = fd.getAll("investmentRanges");
+      ["showAge", "publicConsent", "consent", "showInvestmentIntent", "showInvestmentAmount"].forEach((name) => { value[name] = form.elements.namedItem(name).checked; });
+      return cleanDraft({ ...value, photoUrl, plan: selectedPlan });
     }
-  }
-
-  async function openAuth(mode, role) {
-    if (role) {
-      try { sessionStorage.setItem("kairos_requested_role", role); } catch { /* Storage may be blocked for local-file previews. */ }
+    function updateFields() {
+      const investor = form.querySelector('[name="role"]:checked')?.value === "investor";
+      byId("registration-investor").hidden = !investor; byId("registration-investor").querySelectorAll("input,select,textarea").forEach((field) => { field.disabled = !investor; });
+      const paris = form.elements.department.value === "75"; byId("registration-arrondissement").hidden = !paris; form.elements.arrondissement.disabled = !paris;
+      form.elements.showInvestmentAmount.disabled = !investor || !form.elements.showInvestmentIntent.checked;
+      if (!form.elements.showInvestmentIntent.checked) form.elements.showInvestmentAmount.checked = false;
     }
-    const config = clerkConfiguration();
-    if (!config) {
-      showToast("Clerk est relié à Vercel, mais sa clé publique et son domaine Frontend API doivent être ajoutés à index.html.");
-      return;
+    function renderReview(data) {
+      const summary = byId("review-summary"); summary.replaceChildren();
+      const entries = [["Identité privée", `${data.firstName} ${data.lastName}`.trim()], ["Âge", data.age ? `${data.age} ans · ${data.showAge ? "affichage autorisé" : "privé"}` : "À préciser"], ["Contact privé", data.email], ["Votre rôle", ROLES[data.role]], ["Études", [data.educationLevel, data.studyField].filter(Boolean).join(" · ")], ["Établissement privé", data.school], ["Domaines de travail", data.workFields.join(", ")], ["Projet", data.projectTitle || data.projectCategory], ["Localisation", [data.city, data.department, data.arrondissement].filter(Boolean).join(" · ")], ["Visibilité de la fiche", data.publicConsent ? "Publication facultative autorisée, après traitement" : "Fiche privée"]];
+      entries.filter(([, value]) => value).forEach(([label, value]) => { const row = el("div", "review-row"); row.append(el("dt", "", label), el("dd", "", value)); summary.append(row); });
+      byId("registration-offer").hidden = !data.plan; byId("registration-offer").textContent = data.plan ? `Offre qui vous intéresse : ${PLANS[data.plan]}. Aucun abonnement n’est souscrit.` : "";
     }
-    if (!clerk) {
-      showToast("La connexion se prépare. Réessayez dans quelques secondes.");
-      await initializeClerk();
+    function update() { updateFields(); const data = draft(); byId("profile-preview").replaceChildren(makeCard(previewProfile(data))); if (step === 3) renderReview(data); }
+    function validatePanel(index) {
+      const fields = [...panels[index].querySelectorAll("input,select,textarea")].filter((field) => !field.disabled && field.type !== "file");
+      const invalid = fields.find((field) => !field.checkValidity());
+      if (invalid) { showStep(index, false); invalid.reportValidity(); invalid.focus(); return false; }
+      if (index === 1 && !form.querySelector('[name="workFields"]:checked')) { showStep(index, false); byId("work-fields-error").hidden = false; form.querySelector('[name="workFields"]').focus(); return false; } return true;
     }
-    if (!clerk) return;
-    if (mode === "sign-up") clerk.openSignUp();
-    else if (mode === "sign-in") clerk.openSignIn();
-    else if (mode === "sign-out") await clerk.signOut();
+    function showStep(index, focus = true) {
+      step = Math.max(0, Math.min(index, panels.length - 1)); panels.forEach((panel, i) => { panel.hidden = i !== step; });
+      document.querySelectorAll("[data-step]").forEach((button, i) => { if (i === step) button.setAttribute("aria-current", "step"); else button.removeAttribute("aria-current"); button.classList.toggle("completed", i < step); });
+      byId("previous-step").hidden = step === 0; byId("next-step").hidden = step === panels.length - 1; byId("submit-registration").hidden = step !== panels.length - 1; update();
+      if (focus) { const heading = panels[step].querySelector("h2"); heading.tabIndex = -1; heading.focus({ preventScroll: true }); document.querySelector(".wizard-progress").scrollIntoView({ block: "start", behavior: "auto" }); }
+    }
+    form.addEventListener("input", () => { byId("work-fields-error").hidden = true; update(); }); form.addEventListener("change", update);
+    byId("next-step").addEventListener("click", () => { if (validatePanel(step)) showStep(step + 1); }); byId("previous-step").addEventListener("click", () => showStep(step - 1));
+    document.querySelectorAll("[data-step]").forEach((button) => button.addEventListener("click", () => { const target = Number(button.dataset.step); for (let i = 0; i < target; i++) if (!validatePanel(i)) return; showStep(target); }));
+    form.addEventListener("keydown", (event) => { if (event.key === "Enter" && event.target.tagName === "INPUT" && !["checkbox", "radio", "file"].includes(event.target.type) && step < 3) { event.preventDefault(); if (validatePanel(step)) showStep(step + 1); } });
+    byId("profile-photo").addEventListener("change", async (event) => {
+      const file = event.target.files[0]; if (!file) return; const status = byId("photo-status");
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > MAX_PHOTO_BYTES) { status.textContent = "Choisissez un JPG, PNG ou WebP de 1 Mo maximum."; event.target.value = ""; return; }
+      try {
+        const value = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+        const checked = safePhoto(value); if (!checked) throw new Error("Invalid photo");
+        await new Promise((resolve, reject) => { const image = new Image(); image.onload = resolve; image.onerror = reject; image.src = checked; });
+        photoUrl = checked; byId("remove-photo").hidden = false; status.textContent = "Photo ajoutée à votre aperçu. Elle n’a pas été envoyée."; update();
+      } catch { status.textContent = "Cette image n’a pas pu être lue. Essayez une autre photo."; }
+    });
+    byId("remove-photo").addEventListener("click", () => { photoUrl = ""; byId("profile-photo").value = ""; byId("remove-photo").hidden = true; byId("photo-status").textContent = "Photo retirée de votre fiche."; update(); });
+    function restore() {
+      const data = storedDraft(); if (!data) return;
+      Object.entries(data).forEach(([name, value]) => { const fields = [...form.querySelectorAll("[name]")].filter((field) => field.name === name); fields.forEach((field) => { if (field.type === "checkbox") field.checked = Array.isArray(value) ? value.includes(field.value) : value === true; else if (field.type === "radio") field.checked = field.value === value; else if (field.type !== "file") field.value = value; }); });
+      photoUrl = data.photoUrl; selectedPlan = data.plan || selectedPlan; byId("remove-photo").hidden = !photoUrl; form.elements.consent.checked = false;
+      byId("draft-status").textContent = "Brouillon récupéré. Vérifiez vos informations et confirmez votre consentement avant l’envoi."; showStep(0);
+    }
+    byId("draft-banner").hidden = !storedDraft(); byId("restore-draft").addEventListener("click", restore);
+    byId("delete-draft").addEventListener("click", () => { try { localStorage.removeItem(DRAFT_KEY); byId("draft-banner").hidden = true; byId("draft-status").textContent = "Le brouillon conservé sur cet appareil a été supprimé. Le formulaire à l’écran reste disponible."; } catch { toast("Le brouillon n’a pas pu être supprimé."); } });
+    byId("save-draft").addEventListener("click", () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), profile: draft() })); byId("draft-banner").hidden = false; byId("draft-status").textContent = "Brouillon conservé uniquement sur cet appareil. Cette action ne vous inscrit pas auprès de Kairos."; } catch { byId("draft-status").textContent = "Le navigateur ne permet pas de garder ce brouillon. Vous pouvez télécharger votre fiche."; } });
+    byId("download-profile").addEventListener("click", () => {
+      const data = draft(); const lines = ["MA FICHE KAIROS — BROUILLON PRIVÉ", "Ce document n’est pas une confirmation d’inscription.", ""];
+      const labels = { firstName: "Prénom", lastName: "Nom", age: "Âge", email: "E-mail", role: "Rôle", headline: "Présentation courte", bio: "À propos", professionalStatus: "Situation", educationLevel: "Études", studyField: "Domaine d’études", school: "Établissement", experience: "Expérience", availability: "Disponibilité", workFields: "Domaines de travail", skills: "Compétences", projectCategory: "Secteur", projectStage: "Avancement", projectTitle: "Projet", projectDescription: "Description", collaborationType: "Collaboration", lookingFor: "Profils recherchés", city: "Ville", department: "Département", arrondissement: "Arrondissement", investmentRanges: "Tranches d’investissement", investmentSectors: "Secteurs d’investissement", investmentProjectTypes: "Projets d’investissement", investmentAmount: "Montant envisagé" };
+      Object.entries(labels).forEach(([key, label]) => { const value = Array.isArray(data[key]) ? data[key].join(", ") : data[key]; if (value) lines.push(`${label} : ${key === "role" ? ROLES[value] : value}`); });
+      lines.push("", `Photo : ${photoUrl ? "sélectionnée dans le formulaire, non incluse dans ce document" : "non renseignée"}`, `Visibilité autorisée : ${data.publicConsent ? "oui" : "non"}`, `Affichage de l’âge : ${data.showAge ? "oui" : "non"}`);
+      const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" })); const link = el("a"); link.href = url; link.download = "ma-fiche-kairos.txt"; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault(); for (let i = 0; i < panels.length; i++) if (!validatePanel(i)) return;
+      const data = draft(); const feedback = byId("registration-feedback"), submit = byId("submit-registration"); submit.disabled = true; feedback.classList.remove("error"); feedback.textContent = "Envoi de votre demande…";
+      try {
+        // Server must validate consent, persist the request, and only then return { registered: true }.
+        const result = await fetchJSON("/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, source: "profile-pre-registration", submittedAt: new Date().toISOString() }) });
+        if (result.registered !== true && result.status !== "registered") throw new Error("Registration not confirmed");
+        document.querySelector(".registration-layout").hidden = true; byId("draft-banner").hidden = true; byId("registration-success").hidden = false; byId("registration-success").focus();
+      } catch { feedback.classList.add("error"); feedback.textContent = "L’envoi à Kairos n’est pas encore disponible ou n’a pas pu être confirmé. Vous n’avez pas de confirmation de préinscription. Gardez votre brouillon sur cet appareil ou téléchargez votre fiche pour la reprendre plus tard."; }
+      finally { submit.disabled = false; }
+    });
+    if (params.get("reprendre") === "1" && storedDraft()) restore(); else showStep(0, false);
   }
-
-  function updateRoleFields() {
-    const isInvestor = byId("role-select")?.value === "investor";
-    byId("investor-fields").hidden = !isInvestor;
-    byId("investor-fields").querySelectorAll("input,select,textarea").forEach((field) => { field.disabled = !isInvestor; });
-    const arrField = document.querySelector('[name="arrondissement"]');
-    if (arrField) arrField.disabled = byId("department-select").value !== "75";
-    byId("arrondissement-field").hidden = byId("department-select").value !== "75";
-    const isParisSearch = document.querySelector('#discover-filters [name="department"]')?.value === "75";
-    byId("filter-arrondissement-field").hidden = !isParisSearch;
-    byId("filter-arrondissement-field").querySelector("select").disabled = !isParisSearch;
-    const showIntent = document.querySelector('[name="showInvestmentIntent"]')?.checked;
-    const publishAmount = document.querySelector('[name="showInvestmentAmount"]');
-    const amount = document.querySelector('[name="investmentAmount"]');
-    if (!showIntent && publishAmount) publishAmount.checked = false;
-    if (publishAmount) publishAmount.disabled = !isInvestor || !showIntent;
-    if (amount) amount.disabled = !isInvestor;
-  }
-
-  function formDataObject(form) {
-    const data = Object.fromEntries(new FormData(form).entries());
-    form.querySelectorAll('input[type="checkbox"][name]').forEach((checkbox) => {
-      const named = form.querySelectorAll(`input[type="checkbox"][name="${CSS.escape(checkbox.name)}"]`);
-      if (named.length > 1) {
-        data[checkbox.name] = Array.from(named).filter((item) => item.checked).map((item) => item.value);
-      } else {
-        data[checkbox.name] = checkbox.checked;
+  async function initDirectory() {
+    let profiles = [], onlyFavorites = false, available = false;
+    const filters = byId("directory-filters");
+    function filterValues() { return Object.fromEntries(new FormData(filters).entries()); }
+    function render() {
+      const values = filterValues(); const shown = profiles.filter((p) => matchesFilters(p, values) && (!onlyFavorites || favoriteIds.has(p.id)));
+      byId("directory-results").replaceChildren(); byId("favorite-count").textContent = favoriteIds.size;
+      byId("directory-count").textContent = profiles.length ? `${shown.length} profil${shown.length > 1 ? "s" : ""}${onlyFavorites ? " en favoris" : " disponible" + (shown.length > 1 ? "s" : "")}` : "Aucun profil public disponible";
+      if (shown.length) shown.forEach((p) => byId("directory-results").append(makeCard(p)));
+      else { const empty = el("div", "directory-empty"); empty.append(el("span", "", onlyFavorites ? "♡" : "↗"), el("h2", "", onlyFavorites ? "Votre sélection est encore vide." : profiles.length ? "Aucun profil pour ces critères." : "Les premières fiches viendront avec l’ouverture."), el("p", "", profiles.length ? "Essayez d’autres critères ou ajoutez des profils à vos favoris." : "Préparez votre fiche sur liste d’attente. Seules les personnes ayant autorisé la publication pourront être présentées ici.")); const link = el("a", "button button-outline", "Préparer ma fiche ↗"); link.href = "inscription.html"; empty.append(link); byId("directory-results").append(empty); }
+      byId("directory-status").textContent = available ? "Seules les fiches publiées avec consentement sont présentées." : "Le répertoire public n’est pas encore connecté. Les brouillons locaux ne sont jamais ajoutés à cette liste.";
+    }
+    const local = storedDraft(); if (local) { byId("private-draft-section").hidden = false; byId("private-draft-card").append(makeCard(previewProfile(local))); }
+    filters.addEventListener("submit", (event) => { event.preventDefault(); render(); }); filters.addEventListener("change", render);
+    let timer; filters.elements.q.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(render, 180); });
+    byId("show-favorites").addEventListener("click", (event) => { onlyFavorites = !onlyFavorites; event.currentTarget.setAttribute("aria-pressed", String(onlyFavorites)); render(); });
+    function openProfile(p) {
+      const detail = byId("member-detail"); detail.replaceChildren(makeCard({ ...p, preview: true }));
+      const items = [["À propos", p.bio], ["Parcours", [p.professionalStatus, p.education, p.experience].filter(Boolean).join(" · ")], ["Compétences", p.skills], ["Projet", p.projectDescription], ["Collaboration", [p.collaborationType, p.lookingFor, p.availability].filter(Boolean).join(" · ")], ["Investissement partagé", [p.investmentSectors, p.investmentProjectTypes, p.investmentAmount, ...(p.investmentRanges || [])].filter(Boolean).join(" · ")]];
+      items.filter(([, value]) => value).forEach(([label, value]) => { const section = el("section", "member-detail-section"); section.append(el("h3", "", label), el("p", "", value)); detail.append(section); }); byId("member-dialog").showModal();
+    }
+    byId("close-member-dialog").addEventListener("click", () => byId("member-dialog").close());
+    byId("directory-results").addEventListener("click", async (event) => {
+      const save = event.target.closest("[data-save-profile]"), open = event.target.closest("[data-open-profile]"), like = event.target.closest("[data-like-profile]");
+      if (save) { const id = save.dataset.saveProfile; if (!profiles.some((p) => p.id === id)) return; const previous = favoriteIds.has(id); if (previous) favoriteIds.delete(id); else favoriteIds.add(id); if (!saveFavorites()) { if (previous) favoriteIds.add(id); else favoriteIds.delete(id); } render(); }
+      if (open) { const p = profiles.find((item) => item.id === open.dataset.openProfile); if (p) openProfile(p); }
+      if (like) { const p = profiles.find((item) => item.id === like.dataset.likeProfile); if (!p?.canLike) return; like.disabled = true;
+        try { const result = await fetchJSON(`/api/waitlist/profiles/${encodeURIComponent(p.id)}/like`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "toggle" }) }); if (!Number.isSafeInteger(result.likesCount) || result.likesCount < 0) throw new Error("Invalid count"); p.likesCount = result.likesCount; render(); }
+        catch { toast("Votre like n’a pas pu être confirmé. Les interactions ouvriront avec le service de profils."); like.disabled = false; }
       }
     });
-    if (data.role && data.role !== "investor") {
-      data.investmentRanges = [];
-      data.investmentSectors = "";
-      data.investmentProjectTypes = "";
-      data.investmentAmount = "";
-      data.showInvestmentIntent = false;
-      data.showInvestmentAmount = false;
-    }
-    return data;
+    render();
+    try { const result = await fetchJSON("/api/waitlist/profiles"); if (!Array.isArray(result.profiles)) throw new Error("Invalid directory"); profiles = result.profiles.map(publicRecord).filter(Boolean); available = true; render(); } catch { render(); }
   }
-
-  async function saveProfile(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const button = form.querySelector('[type="submit"]');
-    const status = byId("profile-status");
-    button.disabled = true;
-    setStatus(status, "Enregistrement en cours…");
-    try {
-      await request(API.profile, { method: "PUT", body: JSON.stringify(formDataObject(form)) });
-      setStatus(status, "Profil enregistré. Vous pourrez le modifier à tout moment.");
-      showToast("Votre profil Kairos est enregistré.");
-    } catch (error) {
-      const message = error.status === 404 || error.status === 405
-        ? "Le profil est prêt, mais l’API de sauvegarde n’est pas encore installée. Rien n’a été envoyé ni enregistré."
-        : "Impossible d’enregistrer pour le moment. Vos informations n’ont pas été sauvegardées.";
-      setStatus(status, message, true);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  function roleLabel(role) {
-    return ({ founder: "Porteur de projet", partner: "Futur associé", investor: "Investisseur" })[role] || "Membre Kairos";
-  }
-
-  function createProfileCard(profile) {
-    const card = document.createElement("article");
-    card.className = "discovery-card";
-    const top = document.createElement("div");
-    top.className = "discovery-card-top";
-    const name = document.createElement("h2");
-    name.textContent = profile.projectTitle || profile.headline || profile.displayName || "Membre Kairos";
-    const role = document.createElement("span");
-    role.textContent = roleLabel(profile.role);
-    top.append(name, role);
-    const bio = document.createElement("p");
-    bio.textContent = profile.projectDescription || profile.bio || "Ce membre n’a pas encore ajouté de présentation.";
-    const place = document.createElement("p");
-    place.className = "discovery-location";
-    place.textContent = [profile.city, profile.department && `${profile.department} · Île-de-France`].filter(Boolean).join(" · ");
-    const tags = document.createElement("div");
-    tags.className = "discovery-tags";
-    [profile.projectCategory, profile.projectStage, profile.skills, profile.sectors].filter(Boolean).join(", ").split(",").map((text) => text.trim()).filter(Boolean).slice(0, 5).forEach((text) => {
-      const tag = document.createElement("span");
-      tag.textContent = text;
-      tags.append(tag);
-    });
-    const actions = document.createElement("div");
-    actions.className = "discovery-actions";
-    [{ type: "like", label: `J’aime · ${Number(profile.likesCount) || 0}` }, { type: "favorite", label: profile.isFavorite ? "♥ Enregistré" : "♡ Ajouter aux favoris" }].forEach(({ type, label }) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "inline-action profile-interaction";
-      button.dataset.action = type;
-      button.dataset.profileId = profile.id;
-      button.textContent = label;
-      actions.append(button);
-    });
-    card.append(top, bio, place, tags, actions);
-    return card;
-  }
-
-  async function loadDiscovery(filters = {}) {
-    const results = byId("discover-results");
-    results.replaceChildren();
-    const loading = document.createElement("p");
-    loading.className = "discovery-message";
-    loading.textContent = "Recherche des profils…";
-    results.append(loading);
-    const params = new URLSearchParams(Object.entries(filters).filter(([, value]) => value));
-    try {
-      const data = await request(`${API.discovery}${params.size ? `?${params}` : ""}`);
-      const profiles = Array.isArray(data) ? data : data.profiles;
-      results.replaceChildren();
-      if (!profiles?.length) {
-        const empty = document.createElement("div");
-        empty.className = "empty-state";
-        empty.innerHTML = '<span class="empty-mark" aria-hidden="true">k</span><h2>Aucun profil pour ces critères.</h2><p>Essayez d’élargir votre recherche ou revenez plus tard.</p>';
-        results.append(empty);
-        return;
-      }
-      const grid = document.createElement("div");
-      grid.className = "discovery-grid";
-      profiles.forEach((profile) => grid.append(createProfileCard(profile)));
-      results.append(grid);
-    } catch {
-      results.replaceChildren();
-      const empty = document.createElement("div");
-      empty.className = "empty-state";
-      empty.innerHTML = '<span class="empty-mark" aria-hidden="true">k</span><h2>La découverte ouvrira dès que les profils seront disponibles.</h2><p>Aucun faux profil n’est affiché. Le service de profils doit être activé pour découvrir les membres de Kairos.</p>';
-      results.append(empty);
-    }
-  }
-
-  async function sendInteraction(button) {
-    const { profileId, action } = button.dataset;
-    button.disabled = true;
-    try {
-      const result = await request(API.interaction(profileId), { method: "POST", body: JSON.stringify({ action }) });
-      if (action === "like") button.textContent = `J’aime · ${Number(result.likesCount) || 0}`;
-      else button.textContent = result.isFavorite ? "♥ Enregistré" : "♡ Ajouter aux favoris";
-      showToast(action === "like" ? "Votre appréciation a été prise en compte." : "Votre sélection a été mise à jour.");
-    } catch {
-      showToast("Cette action sera disponible lorsque le service de profils sera activé.");
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  async function loadFavorites() {
-    const results = byId("favorites-results");
-    results.replaceChildren();
-    try {
-      const data = await request(API.favorites);
-      const profiles = Array.isArray(data) ? data : data.profiles;
-      if (profiles?.length) {
-        const grid = document.createElement("div");
-        grid.className = "discovery-grid";
-        profiles.forEach((profile) => grid.append(createProfileCard(profile)));
-        results.append(grid);
-        return;
-      }
-    } catch { /* An empty state is more useful than showing invented saved profiles. */ }
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.innerHTML = '<span class="empty-mark" aria-hidden="true">♡</span><h2>Votre sélection est vide.</h2><p>Enregistrez un profil lors de votre découverte pour le retrouver ici.</p><button class="button button-outline" type="button" data-switch-view="discover">Découvrir les profils</button>';
-    results.append(empty);
-  }
-
-  async function submitWaitlist(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const button = form.querySelector('[type="submit"]');
-    button.disabled = true;
-    setStatus(byId("waitlist-status"), "Envoi en cours…");
-    try {
-      const response = await fetch(API.waitlist, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.elements.email.value.trim(), consent: form.elements.consent.checked }),
-      });
-      if (!response.ok) throw new Error("Service indisponible");
-      setStatus(byId("waitlist-status"), "Votre demande est bien enregistrée. Merci de votre intérêt pour Kairos.");
-      form.reset();
-    } catch {
-      setStatus(byId("waitlist-status"), "L’inscription aux nouvelles n’est pas encore disponible. Votre adresse n’a pas été envoyée.", true);
-    } finally {
-      button.disabled = false;
-    }
-  }
-
-  function setView(name) {
-    document.querySelectorAll(".view-panel").forEach((panel) => { panel.hidden = panel.id !== `${name}-view`; });
-    document.querySelectorAll(".app-nav").forEach((button) => button.classList.toggle("active", button.dataset.view === name));
-    if (name === "discover") loadDiscovery();
-    if (name === "saved") loadFavorites();
-  }
-
-  document.addEventListener("click", (event) => {
-    const authButton = event.target.closest("[data-auth]");
-    if (authButton) {
-      event.preventDefault();
-      openAuth(authButton.dataset.auth, authButton.dataset.role);
-      return;
-    }
-    const navButton = event.target.closest("[data-view]");
-    if (navButton) setView(navButton.dataset.view);
-    const switchButton = event.target.closest("[data-switch-view]");
-    if (switchButton) setView(switchButton.dataset.switchView);
-    const interaction = event.target.closest(".profile-interaction");
-    if (interaction) sendInteraction(interaction);
-  });
-
-  byId("role-select").addEventListener("change", updateRoleFields);
-  byId("department-select").addEventListener("change", updateRoleFields);
-  document.querySelector('#discover-filters [name="department"]').addEventListener("change", updateRoleFields);
-  document.querySelector('[name="showInvestmentIntent"]').addEventListener("change", updateRoleFields);
-  document.querySelector('[name="showInvestmentAmount"]').addEventListener("change", updateRoleFields);
-  byId("profile-form").addEventListener("submit", saveProfile);
-  byId("waitlist-form").addEventListener("submit", submitWaitlist);
-  byId("discover-filters").addEventListener("submit", (event) => {
-    event.preventDefault();
-    loadDiscovery(formDataObject(event.currentTarget));
-  });
-  byId("menu-toggle").addEventListener("click", (event) => {
-    const button = event.currentTarget;
-    const open = button.getAttribute("aria-expanded") !== "true";
-    button.setAttribute("aria-expanded", String(open));
-    document.querySelector(".main-nav").classList.toggle("open", open);
-  });
-  document.querySelectorAll(".main-nav a").forEach((link) => link.addEventListener("click", () => {
-    document.querySelector(".main-nav").classList.remove("open");
-    byId("menu-toggle").setAttribute("aria-expanded", "false");
-  }));
-
-  updateRoleFields();
-  initializeClerk();
+  fillCatalogs();
+  if (page === "landing") initLanding();
+  if (page === "registration") initRegistration();
+  if (page === "directory") initDirectory();
 })();
