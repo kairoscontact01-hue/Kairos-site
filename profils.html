@@ -1,1005 +1,1264 @@
-:root {
-  --ivory: #faf6ef;
-  --white: #fffdf9;
-  --green: #193d30;
-  --green-hover: #2f5140;
-  --muted: #626e62;
-  --line: #d9dfd3;
-  --soft: #edf0e7;
-  --peach: #f3ae8f;
-  --light-text: #dce5d5;
-  --light-line: #4b6452;
-  --danger: #9b3e2d;
-  --sans: "Manrope", Arial, sans-serif;
-  --serif: "Instrument Serif", Georgia, serif;
-}
-
-* { box-sizing: border-box; }
-
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 125px;
-}
-
-body {
-  margin: 0;
-  color: var(--green);
-  background: var(--ivory);
-  font: 15px/1.75 var(--sans);
-  -webkit-font-smoothing: antialiased;
-}
-
-button, input, select, textarea { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
-button { cursor: pointer; }
-a { color: inherit; text-decoration: none; }
-img { display: block; max-width: 100%; }
-[hidden] { display: none !important; }
-button:disabled { opacity: .55; cursor: not-allowed; }
-
-:focus-visible {
-  outline: 3px solid #9c5032;
-  outline-offset: 4px;
-}
-
-::selection {
-  color: var(--green);
-  background: var(--peach);
-}
-
-h1, h2, h3, p { overflow-wrap: break-word; }
-h1, h2, h3 { font-weight: 500; }
-p { margin: 0 0 18px; }
-
-h1 {
-  margin: 0 0 25px;
-  font-size: clamp(52px, 6.4vw, 88px);
-  line-height: 1.04;
-  letter-spacing: -4px;
-}
-
-h2 {
-  margin: 0;
-  font-size: clamp(36px, 4.2vw, 58px);
-  line-height: 1.12;
-  letter-spacing: -2px;
-}
-
-h3 { line-height: 1.3; }
-
-h1 em, h2 em, .site-footer em {
-  font-family: var(--serif);
-  font-weight: 400;
-}
-
-.wrap {
-  width: calc(100% - 100px);
-  max-width: 1320px;
-  margin-inline: auto;
-}
-
-.section { padding-block: 95px; }
-
-.eyebrow {
-  margin: 0 0 22px;
-  font-size: 10px;
-  font-weight: 700;
-  line-height: 1.6;
-  letter-spacing: 1.3px;
-}
-
-.small-note {
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.9;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-
-.skip-link {
-  position: fixed;
-  top: 10px;
-  left: 15px;
-  z-index: 100;
-  padding: 12px 20px;
-  color: var(--white);
-  background: var(--green);
-  transform: translateY(-160%);
-}
-
-.skip-link:focus { transform: none; }
-
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 23px;
-  min-height: 49px;
-  padding: 13px 22px;
-  border: 1px solid var(--green);
-  border-radius: 2px;
-  color: var(--white);
-  background: var(--green);
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.5;
-  text-align: center;
-  transition: background .18s, color .18s;
-}
-
-.button:hover { background: var(--green-hover); }
-.button > span { font-size: 19px; font-weight: 400; }
-
-.button-outline {
-  color: var(--green);
-  background: transparent;
-}
-
-.button-outline:hover {
-  color: var(--white);
-  background: var(--green);
-}
-
-.button-peach {
-  color: var(--green);
-  background: var(--peach);
-  border-color: var(--peach);
-}
-
-.button-peach:hover { background: #f7c2a9; }
-
-.text-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 7px 0;
-  border: 0;
-  border-bottom: 1px solid currentColor;
-  color: inherit;
-  background: none;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.text-link:hover { text-decoration: underline; text-underline-offset: 5px; }
-
-/* EN-TÊTE UNIQUE */
-
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  height: 108px;
-  border-bottom: 1px solid var(--line);
-  background: var(--ivory);
-}
-
-.header-inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  width: calc(100% - 64px);
-  max-width: 1400px;
-  height: 100%;
-  margin: auto;
-}
-
-.navigation {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  flex-shrink: 0;
-}
-
-.navigation a {
-  padding: 10px 0;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.navigation a:hover {
-  text-decoration: underline;
-  text-underline-offset: 7px;
-}
-
-.header-search {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 100px;
-  max-width: 280px;
-  margin-left: auto;
-  border-bottom: 1px solid var(--line);
-}
-
-.header-search input {
-  width: 100%;
-  min-width: 0;
-  padding: 10px 0;
-  border: 0;
-  color: var(--green);
-  background: transparent;
-  font-size: 12px;
-}
-
-.header-search button {
-  width: 32px;
-  height: 36px;
-  border: 0;
-  color: var(--green);
-  background: none;
-  font-size: 23px;
-}
-
-.favorites-link, .login-button {
-  padding: 8px 0;
-  border: 0;
-  color: var(--green);
-  background: none;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.header-cta {
-  flex-shrink: 0;
-  min-height: 43px;
-  padding: 10px 15px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 118px;
-  width: 118px;
-  height: 100px;
-}
-
-.brand img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.menu-button { display: none; }
-
-/* ACCUEIL */
-
-.hero {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  align-items: center;
-  gap: 7%;
-  padding-block: 70px 58px;
-}
-
-.hero h1 em { display: block; font-size: 1.16em; }
-
-.hero-lead {
-  max-width: 445px;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.95;
-}
-
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 22px 27px;
-  margin-top: 28px;
-}
-
-.location-line {
-  margin: 28px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.hero-photo {
-  display: flex;
-  flex-direction: column;
-  align-self: stretch;
-  min-width: 0;
-  margin: 0;
-  background: var(--soft);
-}
-
-.hero-photo > img {
-  width: 100%;
-  min-height: 340px;
-  flex: 1;
-  object-fit: cover;
-}
-
-.hero-photo figcaption {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 21px;
-  border-bottom: 3px solid var(--peach);
-  background: var(--ivory);
-  font-size: 12px;
-}
-
-.hero-photo figcaption a {
-  max-width: 120px;
-  color: var(--muted);
-  font-size: 8px;
-  text-align: right;
-}
-
-.entry-links {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-block: 1px solid var(--line);
-}
-
-.entry-links button {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  min-height: 88px;
-  padding: 20px;
-  border: 0;
-  border-right: 1px solid var(--line);
-  color: var(--green);
-  background: none;
-  font-size: 12px;
-  text-align: left;
-}
-
-.entry-links button:first-child { padding-left: 0; }
-.entry-links button:last-child { border-right: 0; padding-right: 0; }
-.entry-links small { color: var(--muted); font-size: 10px; }
-.entry-links b { margin-left: auto; font-size: 24px; font-weight: 400; }
-
-.manifesto {
-  display: grid;
-  grid-template-columns: 1fr 3fr;
-  gap: 7%;
-}
-
-.manifesto > .eyebrow { padding-top: 10px; }
-
-.two-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-top: 30px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.section-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 40px;
-}
-
-.section-heading > p {
-  max-width: 335px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.dark-section {
-  color: var(--ivory);
-  background: var(--green);
-}
-
-.dark-section .eyebrow, .role-number { color: var(--peach); }
-.dark-section .section-heading > p { color: var(--light-text); }
-
-.role-grid, .steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 45px;
-  margin-top: 45px;
-}
-
-.role-grid article {
-  padding-top: 24px;
-  border-top: 1px solid var(--light-line);
-}
-
-.role-number { font-size: 12px; }
-
-.role-grid h3 {
-  margin: 20px 0 15px;
-  font-family: var(--serif);
-  font-size: 35px;
-}
-
-.role-grid p {
-  min-height: 80px;
-  color: var(--light-text);
-  font-size: 13px;
-}
-
-.steps-grid article {
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
-
-.steps-grid article > span {
-  color: var(--muted);
-  font-family: var(--serif);
-  font-size: 35px;
-}
-
-.steps-grid h3 { margin: 20px 0 15px; font-size: 21px; }
-.steps-grid p { color: var(--muted); font-size: 14px; }
-
-/* OFFRES */
-
-.pricing-section { border-top: 1px solid var(--line); }
-
-.free-line {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-  margin-top: 35px;
-  padding: 20px 0;
-  border-block: 1px solid var(--line);
-}
-
-.free-line strong {
-  font-family: var(--serif);
-  font-size: 26px;
-  font-weight: 400;
-}
-
-.free-line p { margin: 0; color: var(--muted); font-size: 12px; }
-
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 25px;
-}
-
-.price-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 30px 25px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--green);
-  background: var(--white);
-}
-
-.price-card h3 { margin: 0 0 22px; font-size: 23px; letter-spacing: -.7px; }
-
-.price {
-  margin: 0;
-  font-size: 61px;
-  line-height: 1.1;
-  letter-spacing: -3px;
-}
-
-.price > span { font-size: 27px; letter-spacing: 0; }
-.period { margin-top: 10px; color: var(--muted); font-size: 11px; }
-
-.price-card ul {
-  width: 100%;
-  flex: 1;
-  margin: 18px 0 30px;
-  padding: 0;
-  list-style: none;
-  font-size: 12px;
-}
-
-.price-card li { padding: 11px 0; border-bottom: 1px solid var(--line); }
-.price-card > .button { width: 100%; padding-inline: 10px; font-size: 11px; }
-
-.featured { color: var(--ivory); background: var(--green); border-color: var(--green); }
-.featured .eyebrow { color: var(--peach); }
-.featured .period { color: var(--light-text); }
-.featured li { border-color: var(--light-line); }
-.pricing-grid + .small-note { margin-top: 24px; max-width: 950px; }
-
-.workshops { gap: 10%; margin-top: 42px; }
-.workshops h3 { margin-top: 0; color: var(--green); font-size: 26px; }
-
-.workshop-prices p {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 17px 0;
-  margin: 0;
-  border-bottom: 1px solid var(--line);
-  color: var(--green);
-}
-
-.workshop-prices strong { font-family: var(--serif); font-size: 36px; font-weight: 400; }
-.workshop-prices small { display: block; margin-top: 14px; font-size: 10px; }
-
-.invitation {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  align-items: center;
-  gap: 10%;
-  padding: 45px;
-  border: 1px solid var(--line);
-  border-left: 4px solid var(--peach);
-}
-
-.invitation > div > p:not(.eyebrow) { color: var(--muted); font-size: 14px; }
-.invitation small { display: block; margin-top: 13px; color: var(--muted); font-size: 10px; }
-
-.faq {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 12%;
-}
-
-.faq-list { border-top: 1px solid var(--line); }
-.faq details { border-bottom: 1px solid var(--line); }
-
-.faq summary {
-  position: relative;
-  padding: 23px 30px 23px 0;
-  list-style: none;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.faq summary::after { content: "+"; position: absolute; right: 0; font-size: 21px; }
-.faq details[open] summary::after { content: "−"; }
-.faq details p { color: var(--muted); font-size: 13px; }
-summary::-webkit-details-marker { display: none; }
-
-/* INSCRIPTION */
-
-.page-section { padding-block: 50px 80px; }
-
-.page-heading { max-width: 780px; margin-bottom: 35px; }
-.page-heading h1 { font-size: clamp(45px, 5.2vw, 69px); letter-spacing: -2.7px; }
-.page-heading > p:last-child { max-width: 650px; color: var(--muted); font-size: 14px; }
-
-.account-panel, .draft-banner, .directory-note {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 25px;
-  padding: 23px;
-  margin-bottom: 28px;
-  background: var(--soft);
-  border: 1px solid var(--line);
-}
-
-.account-panel h2 { margin-bottom: 8px; font-size: 24px; letter-spacing: -.7px; }
-.account-panel p, .draft-banner p, .directory-note p { margin: 0; color: var(--muted); font-size: 12px; }
-.account-actions, .draft-banner > div { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; }
-
-.registration-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 290px;
-  align-items: start;
-  gap: 55px;
-}
-
-.progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 22px; }
-
-.progress button {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 13px 0;
-  border: 0;
-  border-top: 2px solid var(--line);
-  color: var(--muted);
-  background: none;
-  font-size: 10px;
-  text-align: left;
-}
-
-.progress button[aria-current="step"] { color: var(--green); border-color: var(--green); font-weight: 700; }
-.progress button:disabled { opacity: .6; }
-
-.form-panel { padding: 32px; border: 1px solid var(--line); background: var(--white); }
-.form-heading { margin-bottom: 28px; }
-.form-heading .eyebrow { margin-bottom: 12px; }
-.form-heading h2 { margin-bottom: 13px; font-size: 30px; letter-spacing: -1px; }
-.form-heading > p:last-child { margin: 0; color: var(--muted); font-size: 12px; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; }
-.field { display: flex; flex-direction: column; gap: 8px; min-width: 0; font-size: 12px; font-weight: 600; }
-.field.wide { grid-column: 1 / -1; }
-
-.field input, .field select, .field textarea {
-  width: 100%;
-  min-width: 0;
-  min-height: 48px;
-  padding: 11px 12px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  color: var(--green);
-  background: var(--white);
-  font-size: 14px;
-  font-weight: 400;
-}
-
-.field input:hover, .field select:hover, .field textarea:hover { border-color: var(--green); }
-.field textarea { resize: vertical; min-height: 115px; }
-.field small { color: var(--muted); font-size: 10px; font-weight: 400; }
-.field input[type="file"] { font-size: 11px; }
-.field input::placeholder, .header-search input::placeholder { color: var(--muted); opacity: 1; }
-
-.role-picker {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
-  padding: 0;
-  margin: 0 0 28px;
-  border: 0;
-}
-
-.role-picker legend, .choice-fieldset legend { margin-bottom: 12px; font-size: 12px; font-weight: 700; }
-.role-picker label, .choice { position: relative; cursor: pointer; }
-.role-picker input, .choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-
-.role-picker label > span {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  height: 100%;
-  padding: 15px 11px;
-  border: 1px solid var(--line);
-  border-top: 3px solid var(--line);
-}
-
-.role-picker strong { font-size: 11px; }
-.role-picker small { color: var(--muted); font-size: 9px; line-height: 1.7; }
-.role-picker input:checked + span { background: var(--soft); border-color: var(--green); }
-
-.role-picker input:focus-visible + span, .choice input:focus-visible + span {
-  outline: 3px solid #9c5032;
-  outline-offset: 3px;
-}
-
-.choice-fieldset { padding: 0; border: 0; margin: 28px 0; }
-.choice-fieldset > p { color: var(--muted); font-size: 11px; }
-.choices { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.choice span {
-  display: block;
-  padding: 8px 11px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  color: var(--muted);
-  font-size: 11px;
-}
-
-.choice input:checked + span { color: var(--white); background: var(--green); border-color: var(--green); }
-.form-subheading { margin: 30px 0 20px; padding-top: 24px; border-top: 1px solid var(--line); }
-.form-subheading h3 { margin: 0 0 7px; font-size: 21px; }
-.form-subheading p { margin: 0; color: var(--muted); font-size: 12px; }
-#investor-fields > .field { margin-bottom: 20px; }
-
-.check-line { display: flex; align-items: flex-start; gap: 12px; margin: 23px 0; color: var(--muted); font-size: 12px; }
-.check-line > input { flex: 0 0 auto; width: 17px; height: 17px; margin-top: 4px; accent-color: var(--green); }
-.check-line a { text-decoration: underline; overflow-wrap: anywhere; }
-.check-line input:disabled + span { opacity: .55; }
-
-.form-actions { display: flex; justify-content: flex-end; gap: 15px; margin-top: 23px; }
-.form-actions #previous { margin-right: auto; }
-.draft-actions { display: flex; flex-wrap: wrap; gap: 15px 25px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--line); }
-.draft-actions .small-note { flex-basis: 100%; margin: 0; }
-.draft-actions .text-link { font-size: 11px; }
-
-.preview-sidebar { position: sticky; top: 135px; }
-.preview-sidebar > .small-note { margin-top: 18px; }
-.review { margin: 0; }
-.review > div { display: grid; grid-template-columns: 120px 1fr; gap: 20px; padding: 14px 0; border-top: 1px solid var(--line); font-size: 12px; }
-.review dt { color: var(--muted); }
-.review dd { margin: 0; overflow-wrap: anywhere; }
-.privacy-note { padding: 20px; margin: 20px 0; background: var(--soft); font-size: 12px; color: var(--muted); }
-.form-status { margin-top: 15px; color: var(--muted); font-size: 12px; line-height: 1.9; }
-.error-text, .form-status.error { color: var(--danger); }
-.success-panel { padding: 40px; border-top: 3px solid var(--green); background: var(--soft); }
-.success-panel > p:not(.eyebrow) { margin-top: 25px; max-width: 600px; color: var(--muted); }
-
-/* PROFILS */
-
-.directory-note > strong { font-size: 11px; white-space: nowrap; }
-.directory-note > p { flex: 1; }
-
-.directory-filters {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
-  align-items: end;
-  gap: 15px;
-  padding: 25px 0;
-  border-block: 1px solid var(--line);
-}
-
-.directory-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 24px 0 12px; }
-.directory-toolbar p { margin: 0; color: var(--muted); font-size: 12px; }
-#only-favorites[aria-pressed="true"] { text-decoration: underline; }
-.profiles-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 25px; }
-
-.profile-card { min-width: 0; border: 1px solid var(--line); background: var(--white); }
-
-.portrait {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 1 / 1.02;
-  overflow: hidden;
-  background: var(--soft);
-}
-
-.portrait-initial { color: var(--muted); font-family: var(--serif); font-size: 85px; }
-.portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.profile-role { position: absolute; bottom: 12px; left: 12px; max-width: calc(100% - 24px); padding: 5px 9px; background: var(--white); font-size: 9px; }
-
-.save-profile {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  color: var(--green);
-  background: var(--white);
-  font-size: 24px;
-}
-
-.save-profile[aria-pressed="true"] { color: #9c5032; }
-.profile-content { padding: 18px; }
-
-.profile-name {
-  display: block;
-  padding: 0;
-  border: 0;
-  margin: 0;
-  color: var(--green);
-  background: none;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.5;
-  text-align: left;
-}
-
-.profile-city { margin: 5px 0 14px; color: var(--muted); font-size: 10px; }
-.profile-headline { font-size: 12px; color: var(--muted); }
-.profile-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
-.profile-tags span { padding: 3px 6px; color: var(--muted); background: var(--soft); font-size: 9px; }
-.profile-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
-.like-profile { border: 0; padding: 3px 0; color: var(--green); background: none; font-size: 12px; }
-.profile-bottom small { color: var(--muted); font-size: 9px; }
-
-.empty-directory {
-  grid-column: 1 / -1;
-  padding: 55px 25px;
-  border-block: 1px solid var(--line);
-  background: var(--soft);
-  text-align: center;
-}
-
-.empty-directory h2 { max-width: 650px; margin: 0 auto 20px; font-size: 34px; letter-spacing: -1px; }
-.empty-directory p { max-width: 550px; margin: 0 auto 25px; color: var(--muted); font-size: 13px; }
-
-.profile-dialog {
-  width: min(650px, calc(100% - 30px));
-  max-height: 90dvh;
-  padding: 25px;
-  border: 1px solid var(--line);
-  color: var(--green);
-  background: var(--ivory);
-}
-
-.profile-dialog::backdrop { background: #193d30b3; }
-.dialog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: var(--muted); font-size: 11px; }
-.dialog-header button { width: 35px; height: 35px; border: 1px solid var(--line); color: var(--green); background: var(--white); font-size: 24px; }
-.detail-section { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
-.detail-section h3 { margin: 0 0 10px; font-size: 18px; }
-.detail-section p { margin: 0; color: var(--muted); font-size: 13px; white-space: pre-line; }
-
-/* PIED DE PAGE */
-
-.site-footer { margin-top: 25px; padding: 45px 0; color: var(--ivory); background: var(--green); }
-.footer-inner { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: center; }
-.footer-inner > p { margin: 0; font-size: 24px; line-height: 1.35; }
-.footer-inner > div { display: flex; flex-wrap: wrap; gap: 25px; font-size: 12px; }
-.footer-inner > small { grid-column: 1 / -1; padding-top: 20px; border-top: 1px solid var(--light-line); color: var(--light-text); font-size: 10px; }
-
-.toast {
-  position: fixed;
-  bottom: 22px;
-  left: 50%;
-  z-index: 100;
-  width: max-content;
-  max-width: calc(100% - 30px);
-  padding: 15px 20px;
-  border: 1px solid var(--light-line);
-  color: var(--white);
-  background: var(--green);
-  font-size: 12px;
-  opacity: 0;
-  transform: translate(-50%, 15px);
-  pointer-events: none;
-  transition: opacity .2s, transform .2s;
-}
-
-.toast.visible { opacity: 1; transform: translate(-50%, 0); }
-
-/* TABLETTE ET MOBILE */
-
-@media (max-width: 1150px) {
-  .header-inner { gap: 16px; }
-  .navigation { gap: 18px; }
-  .favorites-link { display: none; }
-  .hero { gap: 5%; }
-  .registration-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 30px; }
-  .role-picker { grid-template-columns: 1fr; }
-  .profiles-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .directory-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (max-width: 900px) {
-  .wrap { width: calc(100% - 48px); }
-  .site-header { height: 90px; }
-  .header-inner { width: calc(100% - 32px); }
-  .brand { flex-basis: 90px; width: 90px; height: 82px; }
-
-  .menu-button {
-    display: grid;
-    align-content: center;
-    flex: 0 0 32px;
-    width: 32px;
-    height: 38px;
-    padding: 6px;
-    gap: 6px;
-    border: 0;
-    background: none;
-  }
-
-  .menu-button span { height: 1px; background: var(--green); }
-
-  .navigation { display: none; }
-
-  .navigation.open {
-    position: absolute;
-    top: 100%;
-    left: -16px;
-    right: -16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 28px;
-    padding: 20px 24px;
-    border-block: 1px solid var(--line);
-    background: var(--ivory);
-  }
-
-  .header-search { max-width: none; }
-  .header-search input { font-size: 13px; }
-  .header-cta { font-size: 10px; padding-inline: 12px; gap: 10px; }
-  .section { padding-block: 70px; }
-  .hero { padding-block: 45px; }
-  .hero h1 { font-size: 57px; }
-  .hero-photo > img { min-height: 350px; }
-  .hero-photo figcaption { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .hero-photo figcaption a { max-width: none; text-align: left; }
-  .manifesto { grid-template-columns: 1fr; gap: 15px; }
-  .role-grid, .steps-grid { gap: 25px; }
-  .role-grid h3 { font-size: 29px; }
-  .price-card { padding: 25px 20px; }
-  .price-card h3 { font-size: 20px; }
-  .price { font-size: 52px; }
-  .progress button { flex-direction: column; align-items: flex-start; gap: 5px; }
-  .account-panel { align-items: flex-start; flex-direction: column; }
-}
-
-@media (max-width: 700px) {
-  html { scroll-padding-top: 105px; }
-  .wrap { width: calc(100% - 36px); }
-  .header-inner { gap: 12px; }
-  .brand { flex-basis: 75px; width: 75px; height: 78px; }
-  .header-search input { font-size: 16px; }
-  .header-search { min-width: 0; }
-  .header-cta > span { display: none; }
-  .header-cta { font-size: 10px; padding-inline: 10px; }
-  .login-button { font-size: 10px; }
-  h1 { font-size: 52px; letter-spacing: -2.7px; }
-  h2 { font-size: 39px; letter-spacing: -1.4px; }
-  .hero { grid-template-columns: 1fr; gap: 30px; padding-block: 36px; }
-  .hero h1 { font-size: clamp(49px, 10vw, 68px); }
-  .hero .eyebrow { font-size: 8px; letter-spacing: .7px; }
-  .hero-lead { max-width: 500px; font-size: 14px; }
-  .hero-photo > img { min-height: 0; max-height: 330px; aspect-ratio: 1.45; }
-  .hero-photo figcaption { flex-direction: row; align-items: flex-end; }
-  .hero-photo figcaption a { max-width: 110px; text-align: right; }
-  .entry-links { grid-template-columns: 1fr; }
-  .entry-links button, .entry-links button:first-child, .entry-links button:last-child { min-height: 65px; padding: 17px 0; border-right: 0; border-bottom: 1px solid var(--line); }
-  .entry-links button:last-child { border-bottom: 0; }
-  .section { padding-block: 58px; }
-  .two-columns { grid-template-columns: 1fr; gap: 15px; }
-  .section-heading { flex-direction: column; align-items: flex-start; gap: 23px; }
-  .section-heading > p { max-width: 500px; }
-  .role-grid, .steps-grid { grid-template-columns: 1fr; gap: 27px; margin-top: 30px; }
-  .role-grid p { min-height: 0; max-width: 500px; }
-  .role-grid h3 { font-size: 35px; }
-  .steps-grid h3 { margin-top: 12px; }
-  .free-line { flex-direction: column; align-items: flex-start; gap: 7px; }
-  .pricing-grid { grid-template-columns: 1fr; gap: 18px; }
-  .price-card { padding: 29px; }
-  .price-card h3 { font-size: 26px; }
-  .price { font-size: 62px; }
-  .price-card li { font-size: 13px; }
-  .price-card > .button { font-size: 12px; }
-  .workshops { gap: 25px; margin-top: 30px; }
-  .invitation { grid-template-columns: 1fr; gap: 25px; padding: 30px 23px; }
-  .faq { grid-template-columns: 1fr; gap: 30px; }
-  .page-section { padding-block: 33px 60px; }
-  .page-heading h1 { font-size: 49px; letter-spacing: -2px; }
-  .registration-layout { grid-template-columns: 1fr; gap: 35px; }
-  .form-panel { padding: 26px 20px; }
-  .form-grid { grid-template-columns: 1fr; }
-  .field.wide { grid-column: auto; }
-  .field input, .field select, .field textarea { font-size: 16px; }
-  .field input[type="file"] { font-size: 12px; }
-  .role-picker strong { font-size: 13px; }
-  .role-picker small { font-size: 11px; }
-  .choice span { font-size: 12px; }
-  .preview-sidebar { position: static; max-width: 340px; width: 100%; margin-inline: auto; }
-  .draft-banner, .directory-note { align-items: flex-start; flex-direction: column; gap: 14px; }
-  .review > div { grid-template-columns: 1fr; gap: 5px; }
-  .form-actions { flex-wrap: wrap; gap: 12px; }
-  .form-actions .button { padding-inline: 15px; }
-  .profiles-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
-  .profile-content { padding: 14px 11px; }
-  .profile-name { font-size: 13px; }
-  .profile-headline { font-size: 11px; }
-  .profile-tags span { font-size: 8px; }
-  .profile-role { left: 8px; bottom: 8px; max-width: calc(100% - 16px); font-size: 8px; padding: 4px 6px; }
-  .profile-bottom { flex-wrap: wrap; }
-  .preview-sidebar .profile-name { font-size: 17px; }
-  .preview-sidebar .profile-headline { font-size: 13px; }
-  .preview-sidebar .profile-role { font-size: 10px; }
-  .directory-toolbar { align-items: flex-start; }
-  .directory-toolbar .text-link { font-size: 11px; white-space: nowrap; }
-  .empty-directory { padding: 40px 20px; }
-  .empty-directory h2 { font-size: 30px; }
-  .footer-inner { grid-template-columns: 1fr; }
-  .footer-inner > div { gap: 15px 25px; }
-}
-
-@media (max-width: 440px) {
-  .header-search { display: none; }
-  .header-cta { margin-left: auto; }
-  .login-button { margin-left: auto; }
-  .login-button:not([hidden]) ~ .header-cta { margin-left: 0; }
-  .directory-filters { grid-template-columns: 1fr; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { transition: none !important; animation: none !important; }
-}
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#faf7f1">
+
+  <meta
+    name="description"
+    content="Profils, projets et compétences en Île-de-France. Préparez vos prochaines rencontres sur la liste d’attente Kairos."
+  >
+
+  <title>Les profils — Kairos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .directory-main .directory-filters {
+      grid-template-columns:
+        repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+    }
+
+    .advanced-filters {
+      grid-column: 1 / -1;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .advanced-filters summary {
+      padding: 8px 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .advanced-filters .form-grid {
+      margin-top: 20px;
+    }
+
+    .directory-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .directory-actions button {
+      font-size: 11px;
+    }
+
+    .profile-open {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .private-preview-block {
+      max-width: 300px;
+      margin-top: 25px;
+    }
+
+    .private-caption {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+  <!-- EN-TÊTE -->
+  <header class="site-header">
+    <div class="header-inner">
+
+      <button
+        class="menu-button"
+        id="menu-button"
+        type="button"
+        aria-label="Ouvrir le menu"
+        aria-expanded="false"
+        aria-controls="navigation"
+      >
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav
+        class="navigation"
+        id="navigation"
+        aria-label="Navigation principale"
+      >
+        <a href="index.html#concept">Le concept</a>
+        <a href="profils.html" aria-current="page">Les profils</a>
+        <a href="index.html#offres">Les tarifs</a>
+      </nav>
+
+      <form class="header-search" id="header-search" role="search">
+        <label class="sr-only" for="profile-search">
+          Rechercher un profil ou une compétence
+        </label>
+
+        <input
+          id="profile-search"
+          type="search"
+          maxlength="120"
+          placeholder="Un profil, une compétence…"
+        >
+
+        <button type="submit" aria-label="Rechercher">↗</button>
+      </form>
+
+      <a
+        class="favorites-link"
+        id="header-favorites"
+        href="#resultats"
+      >
+        Mes favoris
+      </a>
+
+      <a class="button header-cta" href="inscription.html">
+        Me préinscrire <span aria-hidden="true">↗</span>
+      </a>
+
+      <a class="brand" href="index.html" aria-label="Kairos, accueil">
+        <img
+          src="assets/kairos-logo.png"
+          alt="Kairos"
+          width="1003"
+          height="873"
+        >
+      </a>
+
+    </div>
+  </header>
+
+  <!-- CONTENU -->
+  <main class="directory-main wrap" id="contenu">
+
+    <div class="directory-heading">
+      <div>
+        <p class="eyebrow">ÎLE-DE-FRANCE · LISTE D’ATTENTE</p>
+
+        <h1>
+          Les bonnes personnes.<br>
+          <em>Pour vos prochaines idées.</em>
+        </h1>
+      </div>
+
+      <p>
+        Un projet à faire grandir, des compétences à partager
+        ou l’envie d’investir. Les rencontres commencent
+        par ce que vous avez en commun.
+      </p>
+    </div>
+
+    <!-- INFORMATION LISTE D’ATTENTE -->
+    <div class="directory-note">
+      <strong>Les rencontres se préparent.</strong>
+
+      <p>
+        Les fiches apparaîtront après ouverture du répertoire
+        et avec l’accord de leurs auteurs.
+        Votre brouillon reste privé.
+      </p>
+
+      <a class="text-link" href="inscription.html">
+        Préparer ma fiche ↗
+      </a>
+    </div>
+
+    <!-- FILTRES -->
+    <form class="directory-filters" id="filters">
+
+      <label class="field">
+        Type de profil
+
+        <select name="role">
+          <option value="">Tous les profils</option>
+          <option value="founder">Apporteur d’idée</option>
+          <option value="partner">Futur associé</option>
+          <option value="investor">Investisseur</option>
+        </select>
+      </label>
+
+      <label class="field">
+        Domaine de compétence
+
+        <select name="workField" id="filter-work">
+          <option value="">Tous les domaines</option>
+        </select>
+      </label>
+
+      <label class="field">
+        Département
+
+        <select name="department" id="filter-department">
+          <option value="">Toute l’Île-de-France</option>
+        </select>
+      </label>
+
+      <button class="button" type="submit">
+        Rechercher ↗
+      </button>
+
+      <details class="advanced-filters">
+        <summary>
+          Préciser la ville, le secteur ou l’arrondissement
+        </summary>
+
+        <div class="form-grid">
+
+          <label class="field">
+            Ville
+
+            <input
+              name="city"
+              maxlength="100"
+              placeholder="Ex. Montreuil, Versailles…"
+            >
+          </label>
+
+          <label class="field">
+            Secteur de projet
+
+            <select name="sector" id="filter-sector">
+              <option value="">Tous les secteurs</option>
+            </select>
+          </label>
+
+          <label class="field" id="arrondissement-field" hidden>
+            Arrondissement de Paris
+
+            <select
+              name="arrondissement"
+              id="filter-arrondissement"
+              disabled
+            >
+              <option value="">Tous les arrondissements</option>
+            </select>
+          </label>
+
+        </div>
+      </details>
+    </form>
+
+    <!-- RÉSULTATS ET FAVORIS -->
+    <div class="directory-toolbar" id="resultats">
+
+      <p id="results-count" role="status">
+        Chargement des profils…
+      </p>
+
+      <div class="directory-actions">
+        <button
+          class="text-link"
+          id="favorites-toggle"
+          type="button"
+          aria-pressed="false"
+        >
+          Mes favoris <span id="favorites-count">0</span>
+        </button>
+
+        <button
+          class="text-link"
+          id="reset-filters"
+          type="button"
+        >
+          Réinitialiser
+        </button>
+      </div>
+
+    </div>
+
+    <p
+      class="small-note"
+      id="directory-status"
+      role="status"
+    ></p>
+
+    <noscript>
+      <p>
+        Activez JavaScript pour utiliser la recherche et les favoris.
+      </p>
+    </noscript>
+
+    <div class="profiles-grid" id="results"></div>
+
+    <!-- BROUILLON PRIVÉ -->
+    <section
+      class="private-draft-section"
+      id="private-draft"
+      hidden
+    >
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">JUSTE POUR VOUS</p>
+          <h2>Votre fiche en préparation.</h2>
+        </div>
+
+        <a
+          class="text-link"
+          href="inscription.html?reprendre=1"
+        >
+          Reprendre mon brouillon ↗
+        </a>
+      </div>
+
+      <div class="private-preview-block" id="private-card"></div>
+
+      <p class="private-caption">
+        Ce brouillon est conservé sur cet appareil.
+        Il n’est ni publié ni ajouté aux résultats.
+      </p>
+    </section>
+
+  </main>
+
+  <!-- PIED DE PAGE -->
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+
+      <p>
+        L’entrepreneuriat commence<br>
+        <em>par une rencontre.</em>
+      </p>
+
+      <div>
+        <a href="index.html#concept">Le concept</a>
+        <a href="index.html#offres">Les tarifs</a>
+        <a href="mailto:kairos.contact01@gmail.com">
+          Nous écrire ↗
+        </a>
+      </div>
+
+      <small>© 2026 Kairos · Paris & Île-de-France</small>
+
+    </div>
+  </footer>
+
+  <!-- DÉTAIL D’UN PROFIL -->
+  <dialog class="profile-dialog" id="profile-dialog">
+    <div class="dialog-header">
+      <span>Fiche Kairos</span>
+
+      <button
+        type="button"
+        id="close-dialog"
+        aria-label="Fermer le profil"
+      >
+        ×
+      </button>
+    </div>
+
+    <div id="profile-detail"></div>
+  </dialog>
+
+  <div
+    class="toast"
+    id="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+  <!-- Configuration publique facultative. -->
+  <script src="config.js"></script>
+
+  <script>
+  (() => {
+    "use strict";
+
+    const $ = id => document.getElementById(id);
+
+    const config = window.KAIROS_CONFIG || {};
+
+    const apiBase = typeof config.apiBase === "string"
+      ? config.apiBase.replace(/\/$/, "")
+      : "";
+
+    const favoriteKey = "kairos.favorites.v1";
+
+    const roles = {
+      founder: "Apporteur d’idée",
+      partner: "Futur associé",
+      investor: "Investisseur",
+      member: "Membre Kairos"
+    };
+
+    const workFields = [
+      "Développement informatique",
+      "Data & intelligence artificielle",
+      "Design & UX/UI",
+      "Commerce & vente",
+      "Marketing & communication",
+      "Gestion de produit",
+      "Finance & comptabilité",
+      "Stratégie & gestion",
+      "Droit & administration",
+      "Ingénierie & industrie",
+      "Santé & bien-être",
+      "Environnement & climat",
+      "Éducation & formation",
+      "Culture & création",
+      "Artisanat",
+      "Opérations & logistique",
+      "Autre domaine"
+    ];
+
+    const departments = [
+      ["75", "Paris"],
+      ["77", "Seine-et-Marne"],
+      ["78", "Yvelines"],
+      ["91", "Essonne"],
+      ["92", "Hauts-de-Seine"],
+      ["93", "Seine-Saint-Denis"],
+      ["94", "Val-de-Marne"],
+      ["95", "Val-d’Oise"]
+    ];
+
+    const sectors = [
+      "Technologie & numérique",
+      "Éducation & formation",
+      "Santé & bien-être",
+      "Environnement & climat",
+      "Alimentation & agriculture",
+      "Commerce & services",
+      "Culture & médias",
+      "Finance & assurance",
+      "Industrie & mobilité",
+      "Économie sociale & solidaire",
+      "Autre secteur",
+      "Je suis encore en exploration"
+    ];
+
+    let profiles = [];
+    let onlyFavorites = false;
+    let pending = true;
+    let available = false;
+    let timer;
+
+    const normalize = value =>
+      String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    const clean = (value, max = 1500) =>
+      typeof value === "string"
+        ? value.trim().slice(0, max)
+        : "";
+
+    const validAge = value =>
+      /^\d{1,3}$/.test(String(value)) &&
+      Number(value) >= 1 &&
+      Number(value) <= 120;
+
+    const list = (value, max = 30) =>
+      Array.isArray(value)
+        ? [...new Set(
+            value
+              .filter(item => typeof item === "string")
+              .map(item => item.slice(0, 150))
+          )].slice(0, max)
+        : [];
+
+    function el(tag, className = "", value) {
+      const element = document.createElement(tag);
+      element.className = className;
+
+      if (value !== undefined) {
+        element.textContent = value;
+      }
+
+      return element;
+    }
+
+    function stored(key, fallback = null) {
+      try {
+        return JSON.parse(localStorage.getItem(key)) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    const favorites = new Set(
+      list(stored(favoriteKey, []), 500)
+    );
+
+    function notify(message) {
+      $("toast").textContent = message;
+      $("toast").classList.add("visible");
+
+      clearTimeout(timer);
+
+      timer = setTimeout(() => {
+        $("toast").classList.remove("visible");
+      }, 4500);
+    }
+
+    function photo(value) {
+      if (typeof value !== "string") return "";
+
+      if (
+        /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(value) &&
+        value.length < 1400000
+      ) {
+        return value;
+      }
+
+      try {
+        const url = new URL(value);
+
+        return (
+          url.protocol === "https:" &&
+          !url.username &&
+          !url.password
+        ) ? url.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function options(select, items) {
+      items.forEach(item => {
+        const [value, label] = Array.isArray(item)
+          ? item
+          : [item, item];
+
+        const option = el("option", "", label);
+        option.value = value;
+        select.append(option);
+      });
+    }
+
+    options($("filter-work"), workFields);
+
+    options(
+      $("filter-department"),
+      departments.map(([code, name]) => [
+        code,
+        code + " · " + name
+      ])
+    );
+
+    options($("filter-sector"), sectors);
+
+    options(
+      $("filter-arrondissement"),
+      Array.from(
+        { length: 20 },
+        (_, index) =>
+          `${index + 1}${index === 0 ? "er" : "e"} arrondissement`
+      )
+    );
+
+    /*
+     * Seuls les profils publiés avec consentement
+     * peuvent apparaître dans le répertoire.
+     */
+    function publicRecord(record) {
+      if (
+        !record ||
+        record.published !== true ||
+        record.publicConsent !== true ||
+        typeof record.id !== "string" ||
+        !record.publicProfile
+      ) {
+        return null;
+      }
+
+      const source = record.publicProfile;
+
+      const profile = {
+        id: record.id.slice(0, 150),
+
+        role: Object.hasOwn(roles, source.role)
+          ? source.role
+          : "member",
+
+        displayName: clean(source.displayName, 100),
+        photoUrl: photo(source.photoUrl),
+
+        age: validAge(source.age)
+          ? Number(source.age)
+          : "",
+
+        workFields: list(source.workFields),
+
+        likesCount:
+          Number.isSafeInteger(record.likesCount) &&
+          record.likesCount >= 0
+            ? record.likesCount
+            : 0,
+
+        canLike: record.canLike === true,
+        liked: record.likedByMe === true
+      };
+
+      if (!profile.id || !profile.displayName) {
+        return null;
+      }
+
+      [
+        "headline",
+        "bio",
+        "city",
+        "department",
+        "arrondissement",
+        "skills",
+        "education",
+        "professionalStatus",
+        "experience",
+        "availability",
+        "projectTitle",
+        "projectCategory",
+        "projectDescription",
+        "collaborationType",
+        "lookingFor",
+        "investmentSectors",
+        "investmentProjectTypes",
+        "investmentAmount"
+      ].forEach(key => {
+        profile[key] = clean(source[key]);
+      });
+
+      profile.investmentRanges = list(source.investmentRanges);
+
+      return profile;
+    }
+
+    async function api(path, settings = {}) {
+      if (location.protocol === "file:" && !apiBase) {
+        throw new Error("Service unavailable");
+      }
+
+      const headers = new Headers(settings.headers || {});
+
+      if (window.Clerk?.session) {
+        const token = await window.Clerk.session.getToken();
+
+        if (token) {
+          headers.set("Authorization", "Bearer " + token);
+        }
+      }
+
+      const response = await fetch(apiBase + path, {
+        credentials: "same-origin",
+        ...settings,
+        headers
+      });
+
+      if (
+        !response.ok ||
+        !response.headers
+          .get("content-type")
+          ?.includes("application/json")
+      ) {
+        throw new Error("Unconfirmed response");
+      }
+
+      return response.json();
+    }
+
+    /* FAVORIS */
+
+    function toggleFavorite(id) {
+      const previous = favorites.has(id);
+
+      if (previous) {
+        favorites.delete(id);
+      } else {
+        favorites.add(id);
+      }
+
+      try {
+        localStorage.setItem(
+          favoriteKey,
+          JSON.stringify([...favorites])
+        );
+
+        render();
+      } catch {
+        if (previous) {
+          favorites.add(id);
+        } else {
+          favorites.delete(id);
+        }
+
+        notify(
+          "Vos favoris n’ont pas pu être conservés sur cet appareil."
+        );
+      }
+    }
+
+    /* LIKES RÉELS */
+
+    async function like(profile, button) {
+      if (!profile.canLike) return;
+
+      button.disabled = true;
+
+      try {
+        const result = await api(
+          "/api/waitlist/profiles/" +
+          encodeURIComponent(profile.id) +
+          "/like",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              action: "toggle"
+            })
+          }
+        );
+
+        if (
+          !Number.isSafeInteger(result.likesCount) ||
+          result.likesCount < 0
+        ) {
+          throw new Error("Unconfirmed like");
+        }
+
+        profile.likesCount = result.likesCount;
+
+        if (typeof result.liked === "boolean") {
+          profile.liked = result.liked;
+        }
+
+        render();
+      } catch {
+        button.disabled = false;
+        notify("Votre like n’a pas pu être confirmé.");
+      }
+    }
+
+    /* CRÉATION DES CARTES */
+
+    function card(profile, preview = false) {
+      const article = el("article", "profile-card");
+      const visual = el("div", "portrait");
+
+      visual.append(
+        el(
+          "span",
+          "portrait-initial",
+          Array.from(profile.displayName || "V")[0]
+        )
+      );
+
+      if (profile.photoUrl) {
+        const img = el("img");
+
+        img.src = profile.photoUrl;
+        img.alt = "Photo de " + profile.displayName;
+        img.loading = "lazy";
+
+        img.addEventListener("error", () => img.remove());
+
+        visual.append(img);
+      }
+
+      visual.append(
+        el(
+          "span",
+          "profile-role",
+          roles[profile.role] || roles.member
+        )
+      );
+
+      if (!preview) {
+        const save = el(
+          "button",
+          "save-profile",
+          favorites.has(profile.id) ? "★" : "☆"
+        );
+
+        save.type = "button";
+
+        save.setAttribute(
+          "aria-label",
+          "Enregistrer " + profile.displayName
+        );
+
+        save.setAttribute(
+          "aria-pressed",
+          String(favorites.has(profile.id))
+        );
+
+        save.addEventListener("click", () => {
+          toggleFavorite(profile.id);
+        });
+
+        visual.append(save);
+      }
+
+      const content = el("div", "profile-content");
+
+      content.append(
+        el(
+          "h3",
+          "profile-name",
+          profile.displayName +
+          (profile.age ? ", " + profile.age + " ans" : "")
+        ),
+
+        el(
+          "p",
+          "profile-city",
+          [profile.city, profile.department]
+            .filter(Boolean)
+            .join(" · ") || "Ville à préciser"
+        ),
+
+        el(
+          "p",
+          "profile-headline",
+          profile.headline ||
+          profile.projectTitle ||
+          "Une envie d’entreprendre à partager."
+        )
+      );
+
+      const tags = el("div", "profile-tags");
+
+      (profile.workFields || []).slice(0, 3).forEach(value => {
+        tags.append(el("span", "", value));
+      });
+
+      content.append(tags);
+
+      if (!preview) {
+        const bottom = el("div", "profile-bottom");
+
+        const button = el(
+          "button",
+          "like-profile",
+          (profile.liked ? "♥ " : "♡ ") + profile.likesCount
+        );
+
+        button.type = "button";
+        button.disabled = !profile.canLike;
+
+        button.setAttribute(
+          "aria-label",
+          `Aimer ${profile.displayName}, ${profile.likesCount} likes`
+        );
+
+        button.setAttribute(
+          "aria-pressed",
+          String(profile.liked)
+        );
+
+        button.title = profile.canLike
+          ? "Aimer ce profil"
+          : "Les likes seront disponibles avec le service";
+
+        button.addEventListener("click", () => {
+          like(profile, button);
+        });
+
+        bottom.append(
+          button,
+          el("small", "", "Sur liste d’attente")
+        );
+
+        content.append(bottom);
+
+        const open = el(
+          "button",
+          "text-link profile-open",
+          "Voir le profil →"
+        );
+
+        open.type = "button";
+
+        open.setAttribute(
+          "aria-label",
+          "Voir le profil de " + profile.displayName
+        );
+
+        open.addEventListener("click", () => {
+          openProfile(profile);
+        });
+
+        content.append(open);
+      } else {
+        content.append(
+          el("small", "small-note", "Aperçu privé")
+        );
+      }
+
+      article.append(visual, content);
+
+      return article;
+    }
+
+    /* DÉTAIL DU PROFIL */
+
+    function openProfile(profile) {
+      $("profile-detail").replaceChildren(
+        card(profile, true)
+      );
+
+      const rows = [
+        ["À propos", profile.bio],
+
+        [
+          "Parcours",
+          [
+            profile.professionalStatus,
+            profile.education,
+            profile.experience
+          ].filter(Boolean).join(" · ")
+        ],
+
+        ["Compétences", profile.skills],
+
+        [
+          "Projet",
+          [
+            profile.projectTitle,
+            profile.projectCategory,
+            profile.projectDescription
+          ].filter(Boolean).join("\n")
+        ],
+
+        [
+          "Collaboration",
+          [
+            profile.collaborationType,
+            profile.lookingFor,
+            profile.availability
+          ].filter(Boolean).join(" · ")
+        ],
+
+        [
+          "Investissement partagé",
+          [
+            profile.investmentSectors,
+            profile.investmentProjectTypes,
+            profile.investmentAmount,
+            ...(profile.investmentRanges || [])
+          ].filter(Boolean).join(" · ")
+        ]
+      ];
+
+      rows
+        .filter(([, value]) => value)
+        .forEach(([label, value]) => {
+          const section = el("section", "detail-section");
+
+          section.append(
+            el("h3", "", label),
+            el("p", "", value)
+          );
+
+          $("profile-detail").append(section);
+        });
+
+      $("profile-detail")
+        .querySelector("small.small-note")
+        ?.remove();
+
+      $("profile-dialog").showModal();
+    }
+
+    /* RECHERCHE ET RÉSULTATS */
+
+    function render() {
+      const filters = Object.fromEntries(
+        new FormData($("filters"))
+      );
+
+      const query = normalize($("profile-search").value);
+
+      const shown = profiles.filter(profile => {
+        const searchable = normalize([
+          profile.displayName,
+          profile.headline,
+          profile.skills,
+          profile.bio,
+          profile.projectTitle,
+          profile.projectDescription,
+          ...profile.workFields
+        ].join(" "));
+
+        return (
+          (!query || searchable.includes(query)) &&
+
+          (!filters.role ||
+            profile.role === filters.role) &&
+
+          (!filters.workField ||
+            profile.workFields.includes(filters.workField)) &&
+
+          (!filters.department ||
+            profile.department === filters.department) &&
+
+          (!filters.city ||
+            normalize(profile.city).includes(
+              normalize(filters.city)
+            )) &&
+
+          (!filters.sector ||
+            profile.projectCategory === filters.sector) &&
+
+          (!filters.arrondissement ||
+            profile.arrondissement === filters.arrondissement) &&
+
+          (!onlyFavorites ||
+            favorites.has(profile.id))
+        );
+      });
+
+      $("results").replaceChildren();
+
+      $("favorites-count").textContent = favorites.size;
+
+      $("favorites-toggle").setAttribute(
+        "aria-pressed",
+        String(onlyFavorites)
+      );
+
+      $("results-count").textContent = pending
+        ? "Chargement des profils…"
+        : `${shown.length} profil${shown.length > 1 ? "s" : ""}` +
+          (
+            onlyFavorites
+              ? " en favoris"
+              : " disponible" + (shown.length > 1 ? "s" : "")
+          );
+
+      if (pending) return;
+
+      if (shown.length) {
+        shown.forEach(profile => {
+          $("results").append(card(profile));
+        });
+
+        return;
+      }
+
+      const empty = el("section", "empty-directory");
+
+      const title = onlyFavorites
+        ? "Votre sélection est encore vide."
+        : profiles.length
+          ? "Aucun profil pour ces critères."
+          : "Les premières rencontres se préparent.";
+
+      const description = onlyFavorites
+        ? "Enregistrez les fiches qui vous intéressent pour les retrouver ici, sur cet appareil."
+        : profiles.length
+          ? "Essayez un autre domaine ou élargissez votre recherche géographique."
+          : "Préparez votre fiche sur liste d’attente. Les profils apparaîtront avec l’ouverture du répertoire et l’accord de leurs auteurs.";
+
+      empty.append(
+        el("h2", "", title),
+        el("p", "", description)
+      );
+
+      const link = el(
+        "a",
+        "button button-outline",
+        "Préparer ma fiche ↗"
+      );
+
+      link.href = "inscription.html";
+
+      empty.append(link);
+      $("results").append(empty);
+    }
+
+    function updateParis() {
+      const paris = $("filter-department").value === "75";
+
+      $("arrondissement-field").hidden = !paris;
+      $("filter-arrondissement").disabled = !paris;
+
+      if (!paris) {
+        $("filter-arrondissement").value = "";
+      }
+    }
+
+    /* MENU MOBILE */
+
+    function closeMenu() {
+      $("navigation").classList.remove("open");
+
+      $("menu-button").setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
+      $("menu-button").setAttribute(
+        "aria-label",
+        "Ouvrir le menu"
+      );
+    }
+
+    $("menu-button").addEventListener("click", () => {
+      const open =
+        $("menu-button").getAttribute("aria-expanded") !== "true";
+
+      $("navigation").classList.toggle("open", open);
+
+      $("menu-button").setAttribute(
+        "aria-expanded",
+        String(open)
+      );
+
+      $("menu-button").setAttribute(
+        "aria-label",
+        open ? "Fermer le menu" : "Ouvrir le menu"
+      );
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeMenu();
+    });
+
+    /* INTERACTIONS */
+
+    $("header-search").addEventListener("submit", event => {
+      event.preventDefault();
+      closeMenu();
+      render();
+
+      $("resultats").scrollIntoView({
+        block: "start"
+      });
+    });
+
+    $("profile-search").addEventListener("input", render);
+
+    $("filters").addEventListener("submit", event => {
+      event.preventDefault();
+      render();
+    });
+
+    $("filters").addEventListener("change", () => {
+      updateParis();
+      render();
+    });
+
+    $("favorites-toggle").addEventListener("click", () => {
+      onlyFavorites = !onlyFavorites;
+      render();
+    });
+
+    $("header-favorites").addEventListener("click", () => {
+      onlyFavorites = true;
+      render();
+    });
+
+    $("reset-filters").addEventListener("click", () => {
+      $("filters").reset();
+      $("profile-search").value = "";
+      onlyFavorites = false;
+
+      updateParis();
+      render();
+    });
+
+    $("close-dialog").addEventListener("click", () => {
+      $("profile-dialog").close();
+    });
+
+    const params = new URLSearchParams(location.search);
+
+    $("profile-search").value =
+      (params.get("q") || "").slice(0, 120);
+
+    onlyFavorites = params.get("favoris") === "1";
+
+    /* BROUILLON PRIVÉ */
+
+    const draft = stored("kairos.preinscription.v1");
+
+    if (draft?.version === 1 && draft.profile) {
+      const source = draft.profile;
+
+      const displayName = clean(source.firstName, 60)
+        ? clean(source.firstName, 60) +
+          (
+            clean(source.lastName)
+              ? " " + Array.from(clean(source.lastName))[0] + "."
+              : ""
+          )
+        : "Votre prénom";
+
+      const role =
+        source.role === "investor" &&
+        source.showInvestmentIntent !== true
+          ? "member"
+          : Object.hasOwn(roles, source.role)
+            ? source.role
+            : "member";
+
+      const preview = {
+        displayName,
+        role,
+
+        age:
+          source.showAge === true && validAge(source.age)
+            ? Number(source.age)
+            : "",
+
+        photoUrl: photo(source.photoUrl),
+        city: clean(source.city),
+        department: clean(source.department),
+        headline: clean(source.headline),
+        projectTitle: clean(source.projectTitle),
+        workFields: list(source.workFields)
+      };
+
+      $("private-card").append(card(preview, true));
+      $("private-draft").hidden = false;
+    }
+
+    /* CHARGEMENT DES PROFILS PUBLIÉS */
+
+    render();
+
+    api("/api/waitlist/profiles")
+      .then(result => {
+        if (!Array.isArray(result.profiles)) {
+          throw new Error("Invalid directory");
+        }
+
+        profiles = result.profiles
+          .map(publicRecord)
+          .filter(Boolean);
+
+        available = true;
+      })
+      .catch(() => {
+        // Le répertoire reste vide si le service n’est pas disponible.
+      })
+      .finally(() => {
+        pending = false;
+
+        $("directory-status").textContent = available
+          ? "Seules les fiches publiées avec consentement sont présentées. Les favoris sont conservés sur cet appareil."
+          : "Le répertoire est en préparation. Vous pouvez déjà préparer votre fiche de préinscription.";
+
+        render();
+      });
+
+  })();
+  </script>
+</body>
+</html>
