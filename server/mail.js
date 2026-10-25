@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 // A stored registration remains valid even if the email provider is unavailable.
 export async function notify(sql, profileId, email) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY || process.env.Resend_api_key;
   if (!apiKey) return 'not_configured';
   const mode = process.env.RESEND_MODE === 'live' ? 'live' : 'test';
   const from = mode === 'test' ? 'Kairos <onboarding@resend.dev>' : process.env.RESEND_FROM;
