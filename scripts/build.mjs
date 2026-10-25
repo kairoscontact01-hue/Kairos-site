@@ -10,7 +10,7 @@ for (const name of ['index.html', 'inscription.html', 'profils.html', 'confident
   await copyFile(resolve(root, name), resolve(output, name));
 }
 let config = await readFile(resolve(root, 'config.js'), 'utf8');
-const key = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+const key = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.Clerk_publishable_key;
 if (key) {
   if (!/^pk_(test|live)_[A-Za-z0-9_-]+$/.test(key.trim())) throw new Error('CLERK_PUBLISHABLE_KEY must be a Clerk public key.');
   config = `window.KAIROS_CONFIG = Object.freeze(${JSON.stringify({ clerkPublishableKey: key.trim(), apiBase: '' })});\n`;
