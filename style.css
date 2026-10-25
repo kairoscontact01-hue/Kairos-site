@@ -705,3 +705,24 @@ summary::-webkit-details-marker { display:none; }
   .admin-detail .registered-layout { grid-template-columns:1fr; }
   .admin-person { padding:20px; }
 }
+
+/* En-tête compact sur téléphone */
+@media (max-width:700px) {
+  html { -webkit-text-size-adjust:100%; text-size-adjust:100%; scroll-padding-top:80px; }
+  .site-header { width:100%; max-width:100vw; height:66px; }
+  .site-header :is(.site-header-inner,.header-inner) { width:100%; max-width:100vw; height:100%; min-width:0; margin:0; padding-inline:12px; gap:8px; flex-wrap:nowrap; }
+  .site-header .brand { order:0; flex:0 0 60px; width:60px; min-width:60px; height:54px; margin:0; }
+  .site-header .brand>img { width:60px; height:54px; object-fit:contain; }
+  .site-header :is(.header-account,.login-button) { order:1; margin-left:auto; }
+  .site-header :is(.header-user,#user-button) { order:2; margin-left:auto; }
+  .site-header :is(.site-header-inner,.header-inner) :is(.header-register,.header-cta) { order:3; flex:0 0 auto; width:auto; max-width:160px; min-height:40px; margin:0 0 0 auto; padding:9px 12px; gap:0; border-radius:5px; font-size:11px; line-height:1.4; letter-spacing:0; white-space:nowrap; }
+  .site-header :is(.header-register,.header-cta)>[data-auth-label] { font:inherit; }
+  .site-header :is(.header-user,#user-button):not([hidden])~:is(.header-register,.header-cta) { margin-left:0; }
+  .site-header :is(.menu-toggle,.menu-button) { order:4; flex:0 0 44px; width:44px; height:44px; min-height:44px; margin:0; padding:12px; gap:5px; align-content:center; justify-content:stretch; }
+  .site-header :is(.menu-toggle,.menu-button)>span { width:20px; height:2px; border-radius:1px; }
+  .site-header :is(.menu-toggle,.menu-button)[aria-expanded=true]>span:first-child { transform:translateY(3.5px) rotate(45deg); }
+  .site-header :is(.menu-toggle,.menu-button)[aria-expanded=true]>span:last-child { transform:translateY(-3.5px) rotate(-45deg); }
+  .site-header :is(.main-nav,.navigation) { order:5; }
+  .site-header :is(.main-nav.open,.navigation.open) { top:100%; left:0; right:0; max-width:100%; padding:18px; }
+  .site-header .main-nav.open .nav-links { grid-template-columns:1fr; gap:4px; }
+}
