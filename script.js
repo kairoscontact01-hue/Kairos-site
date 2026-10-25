@@ -147,7 +147,11 @@
   }
   function syncAccountUI(user) {
     document.body.dataset.accountState = user ? "signed-in" : "signed-out";
-    document.querySelectorAll("[data-auth-label]").forEach((label) => { label.textContent = user ? label.dataset.signedIn : label.dataset.signedOut; });
+    document.querySelectorAll("[data-auth-label]").forEach((label) => {
+      label.textContent = user ? label.dataset.signedIn : label.dataset.signedOut;
+      const link = label.closest("a"); if (link) link.href = user ? "mon-profil.html" : "inscription.html";
+    });
+    document.querySelectorAll("[data-member-nav]").forEach(link => { link.hidden = !user; });
     const content = byId("registration-content"), form = byId("registration-form");
     if (content) { content.hidden = !user; content.inert = !user; }
     if (form) form.inert = !user;
@@ -176,7 +180,7 @@
       await clerkClient.load({ ui: { ClerkUI: window.__internal_ClerkUICtor }, appearance: { variables: { colorPrimary: getComputedStyle(document.documentElement).getPropertyValue("--ink").trim(), borderRadius: "2px" } } });
       document.querySelector(".site-header")?.classList.add("accounts-enabled");
       const panel = byId("account-connection"), userButton = byId("clerk-user-button");
-      let mounted = false, previousUserId;
+      let previousUserId;
       function syncAccount() {
         const user = clerkClient.session ? clerkClient.user : null;
         syncAccountUI(user);
@@ -185,15 +189,21 @@
         document.querySelectorAll(".header-account").forEach((button) => { button.hidden = Boolean(user); });
         document.querySelectorAll("[data-account]").forEach((button) => { button.disabled = false; });
         if (userButton) {
-          userButton.hidden = !user;
-          if (user && !mounted) { clerkClient.mountUserButton(userButton); mounted = true; }
-          if (!user && mounted) { clerkClient.unmountUserButton(userButton); mounted = false; }
+          userButton.hidden = !user; userButton.replaceChildren();
+          if (user) {
+            const avatar = el("a", "header-profile-avatar"); avatar.href = "mon-profil.html"; avatar.setAttribute("aria-label", "Voir mon profil Kairos"); avatar.title = "Mon profil";
+            avatar.append(el("span", "", Array.from(user.firstName || "M")[0]));
+            const photo = safePhoto(user.imageUrl);
+            if (photo) { const img = el("img"); img.src = photo; img.alt = ""; img.addEventListener("error", () => img.remove()); avatar.append(img); }
+            userButton.append(avatar);
+          }
         }
         if (panel) {
-          panel.hidden = false; panel.setAttribute("aria-busy", "false"); panel.querySelector(".account-actions").hidden = Boolean(user); byId("retry-account").hidden = true;
+          panel.hidden = Boolean(user); panel.setAttribute("aria-busy", "false"); panel.querySelector(".account-actions").hidden = Boolean(user); byId("retry-account").hidden = true;
           byId("account-title").textContent = user ? "Votre compte Kairos" : "Commençons par votre compte.";
           byId("account-step").textContent = user ? "COMPTE CONNECTÉ" : "01 / VOTRE COMPTE";
-          byId("account-status").textContent = user ? `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Complétez votre profil ci-dessous ou reprenez votre fiche enregistrée.` : "Créez votre compte sécurisé ou connectez-vous. Le questionnaire s’affichera ensuite, ici même.";
+          const profileState = document.body.dataset.profileState;
+          byId("account-status").textContent = user ? profileState === "saved" ? "Votre compte est connecté et votre préinscription est enregistrée." : profileState === "editing" ? "Vous modifiez votre fiche enregistrée." : ["waiting", "loading"].includes(profileState) ? "Votre compte est connecté. Nous récupérons votre fiche." : profileState === "error" ? "Votre compte est connecté. Votre fiche n’a pas pu être récupérée." : `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Vous pouvez compléter votre profil ci-dessous.` : "Créez votre compte sécurisé ou connectez-vous. Le questionnaire s’affichera ensuite, ici même.";
           const form = byId("registration-form");
           if (user && form) {
             const values = { firstName: user.firstName, lastName: user.lastName, email: user.primaryEmailAddress?.emailAddress };
@@ -201,13 +211,18 @@
             form.dispatchEvent(new Event("input", { bubbles: true }));
           }
           const introduction = document.querySelector(".registration-intro > p:last-child");
-          if (introduction) introduction.textContent = user ? "Votre compte est prêt. Présentez maintenant votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé." : "Créez votre compte ou connectez-vous. Vous pourrez ensuite compléter votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé.";
+          if (introduction) introduction.textContent = user ? ["saved", "editing"].includes(profileState) ? "Retrouvez votre fiche et vos choix de visibilité. Vous êtes sur la liste d’attente Kairos ; aucun paiement n’a été déclenché." : "Votre compte est prêt. Présentez maintenant votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé." : "Créez votre compte ou connectez-vous. Vous pourrez ensuite compléter votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé.";
         }
       }
       clerkClient.addListener(syncAccount); syncAccount();
-      document.querySelectorAll("[data-account]").forEach((button) => button.addEventListener("click", () => {
+      document.querySelectorAll("[data-account]").forEach((button) => button.addEventListener("click", async () => {
         closeHeader();
-        if (button.dataset.account === "sign-up") clerkClient.openSignUp(); else clerkClient.openSignIn();
+        try {
+          if (button.dataset.account === "sign-up") clerkClient.openSignUp();
+          else if (button.dataset.account === "manage") clerkClient.openUserProfile();
+          else if (button.dataset.account === "sign-out") await clerkClient.signOut({ redirectUrl: new URL("index.html", location.href).href });
+          else clerkClient.openSignIn();
+        } catch { toast("Cette action n’a pas pu être effectuée. Réessayez."); }
       }));
     } catch {
       clerkClient = null;
@@ -228,6 +243,33 @@
       });
     });
     document.querySelectorAll("[data-register]").forEach((control) => control.addEventListener("click", (event) => { event.preventDefault(); close(); navigateToRegistration(control.dataset.role); }));
+  }
+  function renderOwnProfile(data, metadata = {}) {
+    const savedData = cleanDraft(data);
+      byId("saved-profile-title").textContent = `${savedData.firstName} ${savedData.lastName}`.trim() || "Votre profil Kairos";
+      const date = new Date(metadata.updatedAt || "");
+      byId("saved-profile-date").textContent = Number.isFinite(date.getTime()) ? `Dernière mise à jour : ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(date)}` : "Votre fiche est enregistrée dans votre compte.";
+      const identity = el("article", "own-profile-card");
+      const portrait = el("div", "own-profile-photo");
+      const initials = el("span", "", [savedData.firstName, savedData.lastName].filter(Boolean).map(name => Array.from(name)[0]).join("")); portrait.append(initials);
+      if (savedData.photoUrl) { const img = el("img"); img.src = savedData.photoUrl; img.alt = "Votre photo de profil"; img.addEventListener("error", () => img.remove()); portrait.append(img); }
+      identity.append(portrait, el("h3", "", `${savedData.firstName} ${savedData.lastName}`.trim()), el("p", "own-profile-role", ROLES[savedData.role] || "Membre Kairos"));
+      if (savedData.headline) identity.append(el("p", "", savedData.headline));
+      identity.append(el("p", "", [savedData.city, savedData.department].filter(Boolean).join(" · ")));
+      byId("saved-profile-card").replaceChildren(identity);
+      byId("saved-profile-visibility").textContent = metadata.published === true && savedData.publicConsent ? "Votre fiche est publiée avec votre accord. Les informations privées ci-contre sont visibles uniquement dans votre espace personnel." : savedData.publicConsent ? "Vous avez autorisé la publication. Votre fiche attend la validation de l’équipe et n’est pas encore publique." : "Votre fiche reste privée. Vous n’avez pas autorisé sa publication.";
+      const content = byId("saved-profile-information"); content.replaceChildren();
+      const groups = [
+        ["Votre parcours", [["Nom et prénom", `${savedData.firstName} ${savedData.lastName}`], ["E-mail privé", savedData.email], ["Âge", `${savedData.age} ans`], ["Votre rôle", ROLES[savedData.role]], ["Présentation", savedData.headline], ["À propos", savedData.bio], ["Situation", savedData.professionalStatus], ["Études", [savedData.educationLevel, savedData.studyField].filter(Boolean).join(" · ")], ["Établissement privé", savedData.school], ["Expérience", savedData.experience], ["Domaines de travail", savedData.workFields.join(", ")], ["Compétences", savedData.skills], ["Disponibilité", savedData.availability]]],
+        ["Votre projet et vos envies", [["Nom du projet", savedData.projectTitle], ["Secteur", savedData.projectCategory], ["Avancement", savedData.projectStage], ["Description", savedData.projectDescription], ["Collaboration", savedData.collaborationType], ["Profils recherchés", savedData.lookingFor], ["Localisation", [savedData.city, savedData.department, savedData.arrondissement, "Île-de-France"].filter(Boolean).join(" · ")], ["Offre qui vous intéresse", PLANS[savedData.plan]]]],
+        ["Vos choix de visibilité", [["Publication autorisée", savedData.publicConsent ? "Oui, après validation de l’équipe" : "Non, fiche privée"], ["Affichage de l’âge", savedData.showAge ? "Autorisé" : "Âge privé"], ["Traitement de la préinscription", savedData.consent ? "Accord donné" : "Non confirmé"]]]
+      ];
+      if (savedData.role === "investor") groups.splice(2, 0, ["Vos préférences d’investissement", [["Tranches", savedData.investmentRanges.join(", ")], ["Secteurs", savedData.investmentSectors], ["Types de projets", savedData.investmentProjectTypes], ["Montant envisagé", savedData.investmentAmount], ["Intention rendue publique", savedData.showInvestmentIntent ? "Oui" : "Non"], ["Montant et tranches rendus publics", savedData.showInvestmentAmount ? "Oui" : "Non"]]]);
+      for (const [title, entries] of groups) {
+        const section = el("section", "saved-information-section"); section.append(el("h3", "", title)); const dl = el("dl", "review-summary");
+        for (const [label, value] of entries.filter(([, value]) => value)) { const row = el("div", "review-row"); row.append(el("dt", "", label), el("dd", "", value)); dl.append(row); }
+        section.append(dl); content.append(section);
+      }
   }
   function initRegistration() {
     const form = byId("registration-form"); form.noValidate = true;
@@ -293,35 +335,63 @@
       const data = storedDraft(); if (!data) return; applyProfile(data);
       byId("draft-status").textContent = "Brouillon récupéré. Vérifiez vos informations et confirmez votre consentement avant l’envoi.";
     }
-    const resume = el("button", "text-link", "Reprendre ma fiche enregistrée →"); resume.type = "button"; resume.hidden = true;
-    byId("account-connection")?.append(resume);
-    let profileOwner, restoreRequested = params.get("reprendre") === "1";
-    document.addEventListener("kairos-account", (event) => {
-      const userId = event.detail.userId;
-      resume.hidden = !userId;
-      if (profileOwner && profileOwner !== userId) {
-        form.reset(); photoUrl = ""; byId("profile-photo").value = ""; byId("remove-photo").hidden = true;
-        byId("photo-status").textContent = ""; byId("registration-feedback").textContent = "";
-        byId("registration-success").hidden = true; document.querySelector(".registration-layout").hidden = false;
-        showStep(0, false);
+    const layout = document.querySelector(".registration-layout");
+    let profileOwner = null, loadGeneration = 0, savedData = null, view = "waiting";
+    let restoreRequested = params.get("reprendre") === "1";
+    function setView(next) {
+      view = next; document.body.dataset.profileState = next;
+      layout.hidden = !["new", "editing"].includes(next);
+      byId("profile-load-panel").hidden = !["loading", "error"].includes(next);
+      byId("retry-profile-load").hidden = next !== "error";
+      byId("profile-load-panel").setAttribute("aria-busy", String(next === "loading"));
+      byId("draft-banner").hidden = next !== "new" || !storedDraft();
+      byId("edit-profile-notice").hidden = next !== "editing";
+      form.inert = !clerkClient?.session || !["new", "editing"].includes(next);
+      byId("submit-registration").textContent = savedData ? "Enregistrer mes modifications ↗" : "Envoyer ma préinscription ↗";
+      if (offer) offer.hidden = !selectedPlan || next === "saved";
+      if (clerkClient?.session) {
+        byId("account-status").textContent = next === "saved" ? "Votre compte est connecté et votre préinscription est enregistrée." : next === "loading" ? "Votre compte est connecté. Nous récupérons votre fiche." : next === "editing" ? "Vous modifiez votre fiche. Les changements seront enregistrés après votre confirmation." : next === "error" ? "Votre compte est connecté. Votre fiche n’a pas pu être récupérée." : "Votre compte est prêt. Vous pouvez compléter votre profil ci-dessous.";
+        const intro = document.querySelector(".registration-intro > p:last-child");
+        if (intro) intro.textContent = savedData ? "Retrouvez votre fiche et vos choix de visibilité. Vous êtes sur la liste d’attente Kairos ; aucun paiement n’a été déclenché." : "Présentez votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé.";
       }
-      profileOwner = userId;
-      if (userId && restoreRequested && storedDraft()) { restoreRequested = false; restore(); }
-    });
-    resume.addEventListener("click", async () => {
-      resume.disabled = true;
-      const owner = clerkClient?.user?.id;
+    }
+    async function loadSavedProfile() {
+      const owner = clerkClient?.session && clerkClient?.user?.id;
+      if (!owner) return;
+      const generation = ++loadGeneration;
+      setView("loading"); byId("profile-load-message").textContent = "Chargement de votre fiche enregistrée…";
       try {
         const result = await fetchJSON("/api/waitlist");
-        if (!owner || clerkClient?.user?.id !== owner || !clerkClient?.session) return;
-        if (!result.profile) { toast("Aucune fiche n’est encore enregistrée pour ce compte."); return; }
-        document.querySelector(".registration-layout").hidden = false; byId("registration-success").hidden = true;
-        applyProfile(cleanDraft(result.profile));
-        byId("draft-status").textContent = "Fiche enregistrée récupérée. Vérifiez vos informations avant de confirmer sa mise à jour.";
-      } catch (error) { toast(error.message || "La fiche n’a pas pu être récupérée."); }
-      finally { resume.disabled = false; }
+        if (generation !== loadGeneration || clerkClient?.user?.id !== owner || !clerkClient?.session) return;
+        if (result.profile === null) {
+          savedData = null; setView("new"); showStep(0, false);
+          if (restoreRequested && storedDraft()) { restoreRequested = false; restore(); }
+        } else if (result.profile && typeof result.profile === "object") {
+          if (params.get("modifier") === "1") { savedData = cleanDraft(result.profile); setView("editing"); applyProfile(savedData); }
+          else location.replace("mon-profil.html");
+        }
+        else throw new Error("La réponse du serveur ne permet pas de retrouver votre fiche.");
+      } catch (error) {
+        if (generation !== loadGeneration || clerkClient?.user?.id !== owner) return;
+        setView("error"); byId("profile-load-message").textContent = `${error.message || "Votre fiche n’a pas pu être récupérée."} Réessayez pour consulter votre fiche ou savoir si elle est déjà enregistrée.`;
+      }
+    }
+    document.addEventListener("kairos-account", (event) => {
+      const userId = event.detail.userId;
+      ++loadGeneration;
+      if (profileOwner !== userId) {
+        form.reset(); photoUrl = ""; savedData = null;
+        const requestedRole = params.get("role");
+        if (["founder", "partner", "investor"].includes(requestedRole)) form.querySelector(`[name="role"][value="${requestedRole}"]`).checked = true;
+        byId("profile-photo").value = ""; byId("remove-photo").hidden = true;
+        byId("photo-status").textContent = ""; byId("registration-feedback").textContent = "";
+      }
+      profileOwner = userId; setView("waiting");
+      if (userId) loadSavedProfile();
     });
-    byId("draft-banner").hidden = !storedDraft(); byId("restore-draft").addEventListener("click", restore);
+    byId("retry-profile-load").addEventListener("click", loadSavedProfile);
+    byId("cancel-profile-edit").addEventListener("click", () => { location.href = "mon-profil.html"; });
+    byId("draft-banner").hidden = true; byId("restore-draft").addEventListener("click", restore);
     byId("delete-draft").addEventListener("click", () => { try { localStorage.removeItem(DRAFT_KEY); byId("draft-banner").hidden = true; byId("draft-status").textContent = "Le brouillon conservé sur cet appareil a été supprimé."; } catch { toast("Le brouillon n’a pas pu être supprimé."); } });
     byId("save-draft").addEventListener("click", () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), profile: draft() })); byId("draft-banner").hidden = false; byId("draft-status").textContent = "Brouillon conservé uniquement sur cet appareil. Cette action ne vous inscrit pas auprès de Kairos."; } catch { byId("draft-status").textContent = "Le navigateur ne permet pas de garder ce brouillon. Vous pouvez télécharger votre fiche."; } });
     byId("download-profile").addEventListener("click", () => {
@@ -334,8 +404,10 @@
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!clerkClient?.session) { toast("Connectez-vous avant de compléter votre profil."); return; }
+      if (!["new", "editing"].includes(view)) return;
+      if (byId("submit-registration").disabled) return;
       for (let i = 0; i < panels.length; i++) if (!validatePanel(i)) return;
-      const data = draft(); const feedback = byId("registration-feedback"), submit = byId("submit-registration"); submit.disabled = true; feedback.classList.remove("error"); feedback.textContent = "Envoi de votre demande…";
+      const data = draft(); const feedback = byId("registration-feedback"), submit = byId("submit-registration"); submit.disabled = true; feedback.classList.remove("error"); feedback.textContent = savedData ? "Enregistrement de vos modifications…" : "Envoi de votre demande…";
       try {
         await accountsReady;
         if (!clerkClient?.session) {
@@ -347,13 +419,44 @@
         const result = await fetchJSON("/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, source: "profile-pre-registration", submittedAt: new Date().toISOString() }) });
         if (!clerkClient?.session || clerkClient?.user?.id !== owner) return;
         if (result.registered !== true && result.status !== "registered") throw new Error("Registration not confirmed");
-        const messages = { sent: "Un e-mail de confirmation vous a été envoyé.", test_sent: "Le site utilise encore le mode de test Resend : l’e-mail a été envoyé uniquement à l’équipe Kairos. Votre fiche est bien enregistrée.", pending: "Votre fiche est bien enregistrée. L’envoi de l’e-mail n’a pas encore été confirmé.", not_configured: "Votre fiche est bien enregistrée. Les e-mails de confirmation ne sont pas encore activés." };
-        byId("registration-success").querySelector("p:not(.eyebrow)").textContent = `Vous rejoignez la liste d’attente Kairos. ${messages[result.notification] || "Votre fiche est bien enregistrée."} Aucun paiement n’a été déclenché.`;
-        document.querySelector(".registration-layout").hidden = true; byId("draft-banner").hidden = true; byId("registration-success").hidden = false; byId("registration-success").focus();
+        // The server has persisted the profile. Remove only this browser's matching draft.
+        const local = storedDraft();
+        if (local && normalize(local.email) === normalize(data.email)) { try { localStorage.removeItem(DRAFT_KEY); } catch {} }
+        location.replace("mon-profil.html");
       } catch (error) { feedback.classList.add("error"); feedback.textContent = `${error.message || "L’envoi n’a pas pu être confirmé."} Vous pouvez garder votre brouillon sur cet appareil.`; if (error.status === 401) clerkClient?.openSignIn(); }
       finally { submit.disabled = false; }
     });
-    showStep(0, false);
+    showStep(0, false); setView("waiting");
+  }
+  function initOwnProfile() {
+    const panel = byId("profile-load-panel"), message = byId("profile-load-message"), retry = byId("retry-profile-load"), saved = byId("registered-profile"), empty = byId("own-profile-empty");
+    let generation = 0, accountId;
+    byId("retry-account").addEventListener("click", () => location.reload());
+    async function load() {
+      const owner = clerkClient?.session && clerkClient?.user?.id;
+      if (!owner) return;
+      const ticket = ++generation;
+      panel.hidden = false; panel.setAttribute("aria-busy", "true"); message.textContent = "Chargement de votre profil…"; retry.hidden = true; saved.hidden = true; empty.hidden = true;
+      try {
+        const result = await fetchJSON("/api/waitlist");
+        if (ticket !== generation || clerkClient?.user?.id !== owner || !clerkClient?.session) return;
+        if (result.profile === null) { panel.hidden = true; empty.hidden = false; }
+        else if (result.profile && typeof result.profile === "object") { renderOwnProfile(result.profile, result); panel.hidden = true; saved.hidden = false; }
+        else throw new Error("Le serveur n’a pas pu retrouver votre fiche.");
+      } catch (error) {
+        if (ticket !== generation || clerkClient?.user?.id !== owner) return;
+        message.textContent = `${error.message || "Le chargement a échoué."} Votre fiche ne peut pas être affichée pour le moment.`; retry.hidden = false;
+      } finally { if (ticket === generation) panel.setAttribute("aria-busy", "false"); }
+    }
+    function changed(userId) {
+      if (accountId === userId) return;
+      accountId = userId; ++generation;
+      saved.hidden = true; empty.hidden = true; byId("saved-profile-card").replaceChildren(); byId("saved-profile-information").replaceChildren(); byId("saved-profile-title").textContent = "Votre profil"; byId("saved-profile-date").textContent = ""; byId("saved-profile-visibility").textContent = "";
+      if (userId) load();
+    }
+    document.addEventListener("kairos-account", event => changed(event.detail.userId));
+    retry.addEventListener("click", load);
+    accountsReady.then(() => changed(clerkClient?.session ? clerkClient.user?.id || null : null));
   }
   async function initDirectory() {
     let profiles = [], onlyFavorites = false, available = false;
@@ -373,10 +476,10 @@
       byId("directory-results").replaceChildren(); byId("favorite-count").textContent = favoriteIds.size;
       byId("directory-count").textContent = profiles.length ? `${shown.length} profil${shown.length > 1 ? "s" : ""}${onlyFavorites ? " en favoris" : " disponible" + (shown.length > 1 ? "s" : "")}` : "Aucun profil public disponible";
       if (shown.length) shown.forEach((p) => byId("directory-results").append(makeCard(p)));
-      else { const empty = el("div", "directory-empty"); empty.append(el("span", "", onlyFavorites ? "♡" : "↗"), el("h2", "", onlyFavorites ? "Votre sélection est encore vide." : profiles.length ? "Aucun profil pour ces critères." : "Les premières rencontres se préparent."), el("p", "", profiles.length ? "Essayez d’autres critères ou ajoutez des profils à vos favoris." : "Préparez votre fiche sur liste d’attente. Seules les personnes ayant autorisé la publication pourront être présentées ici.")); const link = el("a", "button button-outline", "Préparer ma fiche ↗"); link.href = "inscription.html"; empty.append(link); byId("directory-results").append(empty); }
+      else { const empty = el("div", "directory-empty"); empty.append(el("span", "", onlyFavorites ? "♡" : "↗"), el("h2", "", onlyFavorites ? "Votre sélection est encore vide." : profiles.length ? "Aucun profil pour ces critères." : "Les premières rencontres se préparent."), el("p", "", profiles.length ? "Essayez d’autres critères ou ajoutez des profils à vos favoris." : "Préparez votre fiche sur liste d’attente. Seules les personnes ayant autorisé la publication pourront être présentées ici.")); const link = el("a", "button button-outline", clerkClient?.session ? "Voir mon profil ↗" : "Créer mon compte ↗"); link.href = clerkClient?.session ? "mon-profil.html" : "inscription.html"; empty.append(link); byId("directory-results").append(empty); }
       byId("directory-status").textContent = available ? "Seules les fiches publiées avec consentement sont présentées." : "Le répertoire se prépare. Vous pouvez déjà préparer votre fiche. Votre brouillon reste privé.";
     }
-    const local = storedDraft(); if (local) { byId("private-draft-section").hidden = false; byId("private-draft-card").append(makeCard(previewProfile(local))); }
+    const local = storedDraft(); if (local) byId("private-draft-card").append(makeCard(previewProfile(local)));
     function updateDirectoryFields() {
       const paris = filters.elements.department.value === "75";
       const field = byId("directory-arrondissement");
@@ -415,6 +518,7 @@
     let loadGeneration = 0;
     async function load() {
       const generation = ++loadGeneration;
+      byId("private-draft-section").hidden = Boolean(clerkClient?.session) || !local;
       try { const result = await fetchJSON("/api/waitlist/profiles"); if (!Array.isArray(result.profiles)) throw new Error("Invalid directory"); if (generation !== loadGeneration) return; profiles = result.profiles.map(publicRecord).filter(Boolean); available = true; render(); }
       catch { if (generation === loadGeneration) { profiles = []; available = false; render(); } }
     }
@@ -426,5 +530,6 @@
   const accountsReady = initAccounts();
   if (page === "landing") initLanding();
   if (page === "registration") initRegistration();
+  if (page === "profile") initOwnProfile();
   if (page === "directory") initDirectory();
 })();
