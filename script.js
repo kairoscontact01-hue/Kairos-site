@@ -190,11 +190,13 @@
         document.querySelectorAll("[data-account]").forEach((button) => { button.disabled = false; });
         if (userButton) {
           userButton.hidden = !user; userButton.replaceChildren();
+          userButton.style.width = "36px"; userButton.style.flex = "0 0 36px";
           if (user) {
             const avatar = el("a", "header-profile-avatar"); avatar.href = "mon-profil.html"; avatar.setAttribute("aria-label", "Voir mon profil Kairos"); avatar.title = "Mon profil";
+            Object.assign(avatar.style, { display: "grid", placeItems: "center", position: "relative", width: "36px", height: "36px", overflow: "hidden", borderRadius: "50%" });
             avatar.append(el("span", "", Array.from(user.firstName || "M")[0]));
             const photo = safePhoto(user.imageUrl);
-            if (photo) { const img = el("img"); img.src = photo; img.alt = ""; img.addEventListener("error", () => img.remove()); avatar.append(img); }
+            if (photo) { const img = el("img"); img.src = photo; img.alt = ""; img.width = 36; img.height = 36; Object.assign(img.style, { position: "absolute", inset: "0", width: "36px", height: "36px", objectFit: "cover" }); img.addEventListener("error", () => img.remove()); avatar.append(img); }
             userButton.append(avatar);
           }
         }
@@ -250,9 +252,11 @@
       const date = new Date(metadata.updatedAt || "");
       byId("saved-profile-date").textContent = Number.isFinite(date.getTime()) ? `Dernière mise à jour : ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(date)}` : "Votre fiche est enregistrée dans votre compte.";
       const identity = el("article", "own-profile-card");
+      identity.style.maxWidth = "320px";
       const portrait = el("div", "own-profile-photo");
+      Object.assign(portrait.style, { position: "relative", aspectRatio: "1.1", overflow: "hidden" });
       const initials = el("span", "", [savedData.firstName, savedData.lastName].filter(Boolean).map(name => Array.from(name)[0]).join("")); portrait.append(initials);
-      if (savedData.photoUrl) { const img = el("img"); img.src = savedData.photoUrl; img.alt = "Votre photo de profil"; img.addEventListener("error", () => img.remove()); portrait.append(img); }
+      if (savedData.photoUrl) { const img = el("img"); img.src = savedData.photoUrl; img.alt = "Votre photo de profil"; img.width = 260; img.height = 236; Object.assign(img.style, { position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }); img.addEventListener("error", () => img.remove()); portrait.append(img); }
       identity.append(portrait, el("h3", "", `${savedData.firstName} ${savedData.lastName}`.trim()), el("p", "own-profile-role", ROLES[savedData.role] || "Membre Kairos"));
       if (savedData.headline) identity.append(el("p", "", savedData.headline));
       identity.append(el("p", "", [savedData.city, savedData.department].filter(Boolean).join(" · ")));
