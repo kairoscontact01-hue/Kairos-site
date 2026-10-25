@@ -145,19 +145,28 @@
     nav?.querySelectorAll("a").forEach((link) => { if (page === "directory" && link.getAttribute("href") === "profils.html") link.setAttribute("aria-current", "page"); });
     return close;
   }
+  function syncAccountUI(user) {
+    document.body.dataset.accountState = user ? "signed-in" : "signed-out";
+    document.querySelectorAll("[data-auth-label]").forEach((label) => { label.textContent = user ? label.dataset.signedIn : label.dataset.signedOut; });
+    const content = byId("registration-content"), form = byId("registration-form");
+    if (content) { content.hidden = !user; content.inert = !user; }
+    if (form) form.inert = !user;
+  }
   async function initAccounts() {
     function unavailable(message) {
+      syncAccountUI(null);
       const panel = byId("account-connection");
-      if (panel) { panel.hidden = false; panel.querySelector(".account-actions").hidden = true; byId("account-status").textContent = message; }
+      if (panel) { panel.hidden = false; panel.setAttribute("aria-busy", "false"); panel.querySelector(".account-actions").hidden = true; byId("account-status").textContent = message; byId("retry-account").hidden = false; }
     }
     const key = typeof publicConfig.clerkPublishableKey === "string" ? publicConfig.clerkPublishableKey.trim() : "";
-    if (!key) { unavailable("La connexion au compte n’est pas encore configurée. Vous pouvez préparer un brouillon ; l’envoi nécessite une connexion Clerk."); return; }
+    if (!key) { unavailable("La connexion est momentanément indisponible. Réessayez dans quelques instants pour accéder à votre profil."); return; }
     const domain = clerkDomain(key);
-    if (!domain) { unavailable("La clé publique Clerk du site est invalide. L’équipe Kairos doit vérifier sa configuration."); return; }
+    if (!domain) { unavailable("La connexion est momentanément indisponible. Réessayez dans quelques instants."); return; }
     const loadScript = (src, publishableKey) => new Promise((resolve, reject) => {
       const script = document.createElement("script"); script.src = src; script.async = true; script.crossOrigin = "anonymous";
       if (publishableKey) script.dataset.clerkPublishableKey = publishableKey;
-      script.onload = resolve; script.onerror = reject; document.head.append(script);
+      const timeout = setTimeout(() => reject(new Error("Account loading timeout")), 20000);
+      script.onload = () => { clearTimeout(timeout); resolve(); }; script.onerror = () => { clearTimeout(timeout); reject(new Error("Account script unavailable")); }; document.head.append(script);
     });
     try {
       await loadScript(`https://${domain}/npm/@clerk/ui@1/dist/ui.browser.js`);
@@ -169,16 +178,22 @@
       const panel = byId("account-connection"), userButton = byId("clerk-user-button");
       let mounted = false, previousUserId;
       function syncAccount() {
-        const user = clerkClient.user;
+        const user = clerkClient.session ? clerkClient.user : null;
+        syncAccountUI(user);
+        const userId = user?.id || null;
+        if (userId !== previousUserId) { previousUserId = userId; document.dispatchEvent(new CustomEvent("kairos-account", { detail: { userId } })); }
         document.querySelectorAll(".header-account").forEach((button) => { button.hidden = Boolean(user); });
+        document.querySelectorAll("[data-account]").forEach((button) => { button.disabled = false; });
         if (userButton) {
           userButton.hidden = !user;
           if (user && !mounted) { clerkClient.mountUserButton(userButton); mounted = true; }
           if (!user && mounted) { clerkClient.unmountUserButton(userButton); mounted = false; }
         }
         if (panel) {
-          panel.hidden = false; panel.querySelector(".account-actions").hidden = Boolean(user);
-          byId("account-status").textContent = user ? `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Vous pouvez compléter votre fiche de préinscription.` : "Créez votre compte sécurisé ou connectez-vous avant de préparer votre fiche.";
+          panel.hidden = false; panel.setAttribute("aria-busy", "false"); panel.querySelector(".account-actions").hidden = Boolean(user); byId("retry-account").hidden = true;
+          byId("account-title").textContent = user ? "Votre compte Kairos" : "Commençons par votre compte.";
+          byId("account-step").textContent = user ? "COMPTE CONNECTÉ" : "01 / VOTRE COMPTE";
+          byId("account-status").textContent = user ? `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Complétez votre profil ci-dessous ou reprenez votre fiche enregistrée.` : "Créez votre compte sécurisé ou connectez-vous. Le questionnaire s’affichera ensuite, ici même.";
           const form = byId("registration-form");
           if (user && form) {
             const values = { firstName: user.firstName, lastName: user.lastName, email: user.primaryEmailAddress?.emailAddress };
@@ -186,10 +201,8 @@
             form.dispatchEvent(new Event("input", { bubbles: true }));
           }
           const introduction = document.querySelector(".registration-intro > p:last-child");
-          if (introduction) introduction.textContent = "Préparez votre fiche pour Kairos. La création d’un compte ne confirme pas l’envoi de votre préinscription et ne déclenche aucun paiement.";
+          if (introduction) introduction.textContent = user ? "Votre compte est prêt. Présentez maintenant votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé." : "Créez votre compte ou connectez-vous. Vous pourrez ensuite compléter votre parcours, vos compétences et votre projet pour rejoindre la liste d’attente. Aucun paiement ne vous sera demandé.";
         }
-        const userId = user?.id || null;
-        if (userId !== previousUserId) { previousUserId = userId; document.dispatchEvent(new CustomEvent("kairos-account", { detail: { userId } })); }
       }
       clerkClient.addListener(syncAccount); syncAccount();
       document.querySelectorAll("[data-account]").forEach((button) => button.addEventListener("click", () => {
@@ -198,7 +211,7 @@
       }));
     } catch {
       clerkClient = null;
-      unavailable("La connexion au compte n’a pas pu démarrer. Rechargez la page ou réessayez plus tard. Vous pouvez garder votre brouillon en attendant.");
+      unavailable("La connexion n’a pas pu démarrer. Réessayez pour accéder à votre profil.");
       console.warn("Clerk n’a pas pu démarrer. Vérifiez config.js et les domaines autorisés de votre application.");
     }
   }
@@ -220,6 +233,7 @@
     const form = byId("registration-form"); form.noValidate = true;
     const panels = [...form.querySelectorAll("[data-panel]")]; let step = 0, photoUrl = "", selectedPlan = "";
     const params = new URLSearchParams(location.search);
+    byId("retry-account")?.addEventListener("click", () => location.reload());
     if (Object.hasOwn(PLANS, params.get("offre"))) selectedPlan = params.get("offre");
     if (["founder", "partner", "investor"].includes(params.get("role"))) form.querySelector(`[name="role"][value="${params.get("role")}"]`).checked = true;
     function draft() {
@@ -279,11 +293,25 @@
     }
     const resume = el("button", "text-link", "Reprendre ma fiche enregistrée →"); resume.type = "button"; resume.hidden = true;
     byId("account-connection")?.append(resume);
-    document.addEventListener("kairos-account", (event) => { resume.hidden = !event.detail.userId; });
+    let profileOwner, restoreRequested = params.get("reprendre") === "1";
+    document.addEventListener("kairos-account", (event) => {
+      const userId = event.detail.userId;
+      resume.hidden = !userId;
+      if (profileOwner && profileOwner !== userId) {
+        form.reset(); photoUrl = ""; byId("profile-photo").value = ""; byId("remove-photo").hidden = true;
+        byId("photo-status").textContent = ""; byId("registration-feedback").textContent = "";
+        byId("registration-success").hidden = true; document.querySelector(".registration-layout").hidden = false;
+        showStep(0, false);
+      }
+      profileOwner = userId;
+      if (userId && restoreRequested && storedDraft()) { restoreRequested = false; restore(); }
+    });
     resume.addEventListener("click", async () => {
       resume.disabled = true;
+      const owner = clerkClient?.user?.id;
       try {
         const result = await fetchJSON("/api/waitlist");
+        if (!owner || clerkClient?.user?.id !== owner || !clerkClient?.session) return;
         if (!result.profile) { toast("Aucune fiche n’est encore enregistrée pour ce compte."); return; }
         document.querySelector(".registration-layout").hidden = false; byId("registration-success").hidden = true;
         applyProfile(cleanDraft(result.profile));
@@ -302,7 +330,9 @@
       const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" })); const link = el("a"); link.href = url; link.download = "ma-fiche-kairos.txt"; document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
     form.addEventListener("submit", async (event) => {
-      event.preventDefault(); for (let i = 0; i < panels.length; i++) if (!validatePanel(i)) return;
+      event.preventDefault();
+      if (!clerkClient?.session) { toast("Connectez-vous avant de compléter votre profil."); return; }
+      for (let i = 0; i < panels.length; i++) if (!validatePanel(i)) return;
       const data = draft(); const feedback = byId("registration-feedback"), submit = byId("submit-registration"); submit.disabled = true; feedback.classList.remove("error"); feedback.textContent = "Envoi de votre demande…";
       try {
         await accountsReady;
@@ -311,7 +341,9 @@
           throw new Error(clerkClient ? "Connectez-vous ou créez votre compte dans la fenêtre qui s’ouvre, puis cliquez à nouveau sur Envoyer. Votre saisie reste dans ce formulaire." : "La connexion au compte n’est pas disponible. Gardez votre brouillon ; l’équipe Kairos doit vérifier la configuration Clerk.");
         }
         // Server must validate consent, persist the request, and only then return { registered: true }.
+        const owner = clerkClient.user.id;
         const result = await fetchJSON("/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, source: "profile-pre-registration", submittedAt: new Date().toISOString() }) });
+        if (!clerkClient?.session || clerkClient?.user?.id !== owner) return;
         if (result.registered !== true && result.status !== "registered") throw new Error("Registration not confirmed");
         const messages = { sent: "Un e-mail de confirmation vous a été envoyé.", test_sent: "Le site utilise encore le mode de test Resend : l’e-mail a été envoyé uniquement à l’équipe Kairos. Votre fiche est bien enregistrée.", pending: "Votre fiche est bien enregistrée. L’envoi de l’e-mail n’a pas encore été confirmé.", not_configured: "Votre fiche est bien enregistrée. Les e-mails de confirmation ne sont pas encore activés." };
         byId("registration-success").querySelector("p:not(.eyebrow)").textContent = `Vous rejoignez la liste d’attente Kairos. ${messages[result.notification] || "Votre fiche est bien enregistrée."} Aucun paiement n’a été déclenché.`;
@@ -319,7 +351,7 @@
       } catch (error) { feedback.classList.add("error"); feedback.textContent = `${error.message || "L’envoi n’a pas pu être confirmé."} Vous pouvez garder votre brouillon sur cet appareil.`; if (error.status === 401) clerkClient?.openSignIn(); }
       finally { submit.disabled = false; }
     });
-    if (params.get("reprendre") === "1" && storedDraft()) restore(); else showStep(0, false);
+    showStep(0, false);
   }
   async function initDirectory() {
     let profiles = [], onlyFavorites = false, available = false;
