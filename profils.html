@@ -5,7 +5,7 @@
   <meta name="description" content="Découvrez les profils, les projets et les compétences sur Kairos. Préinscriptions en Île-de-France.">
   <title>Les profils — Kairos</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css?v=profil-20261025-3">
 </head>
 <body id="haut" data-page="directory"><a class="skip-link" href="#contenu">Aller au contenu</a>
   <header class="site-header">
@@ -13,7 +13,7 @@
       <a class="brand" href="index.html" aria-label="Kairos, accueil"><img src="logo-kairos.png" alt="Kairos" width="1003" height="873"></a>
       <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="main-nav"><span></span><span></span></button>
       <nav class="main-nav" id="main-nav" aria-label="Navigation principale">
-        <div class="nav-links"><a href="index.html#concept">Le concept</a><a href="profils.html">Les profils</a><a href="index.html#offres">Les tarifs</a><a class="mobile-favorites" href="profils.html?favoris=1">Mes favoris</a></div>
+        <div class="nav-links"><a href="index.html#concept">Le concept</a><a href="profils.html">Découvrir</a><a href="index.html#offres">Les tarifs</a><a class="mobile-favorites" href="profils.html?favoris=1">Mes favoris</a></div>
         <form class="header-search" id="header-search" action="profils.html" method="get" role="search">
           <label class="sr-only" for="header-query">Rechercher un profil ou une compétence</label>
           <input id="header-query" name="q" type="search" maxlength="120" placeholder="Un profil, une compétence…">
@@ -23,37 +23,37 @@
       <a class="header-favorites" href="profils.html?favoris=1" aria-label="Mes favoris"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></a>
       <button class="button button-quiet header-account" type="button" data-account="sign-in" hidden>Connexion</button>
       <div class="header-user" id="clerk-user-button" hidden></div>
-      <a class="button button-primary button-small header-register" href="inscription.html"><span data-auth-label data-signed-out="Créer mon compte" data-signed-in="Mon profil">Créer mon compte</span> <span aria-hidden="true">↗</span></a>
+      <a class="button button-primary button-small header-register" href="inscription.html"><span data-auth-label data-signed-out="Créer mon compte" data-signed-in="Mon profil">Créer mon compte</span> </a>
     </div>
   </header>
   <main class="page-width directory-main" id="contenu">
     <div class="directory-heading"><div><p class="eyebrow">ÎLE-DE-FRANCE · LISTE D’ATTENTE</p><h1>Des profils.<br><em>Des projets en commun.</em></h1></div><p>Un projet à faire grandir, des compétences à partager ou l’envie d’investir. Trouvez les personnes avec qui la suite devient possible.</p></div>
-    <div class="preopening-note"><span>Les rencontres se préparent</span><p>Les fiches apparaîtront avec l’ouverture du répertoire et l’accord de leurs auteurs.</p><a href="inscription.html">Préparer ma fiche ↗</a></div>
+    <div class="preopening-note"><span>Les rencontres se préparent</span><p>Les fiches apparaîtront avec l’ouverture du répertoire et l’accord de leurs auteurs.</p><a href="inscription.html">Préparer ma fiche</a></div>
     <form class="directory-filters" id="directory-filters">
       <input type="hidden" name="q" value="">
       <label class="field">Type de profil<select name="role"><option value="">Tous les profils</option><option value="founder">Apporteur d’idée</option><option value="partner">Futur associé</option><option value="investor">Investisseur</option></select></label>
       <label class="field">Domaine de compétence<select name="workField" data-catalog="workFields"><option value="">Tous les domaines</option></select></label>
       <label class="field">Département<select name="department" id="directory-department" data-catalog="departments"><option value="">Toute l’Île-de-France</option></select></label>
-      <button class="button button-primary" type="submit">Rechercher ↗</button>
+      <button class="button button-primary" type="submit">Rechercher</button>
       <details class="advanced-filters"><summary>Préciser la ville et le secteur</summary><div class="form-grid"><label class="field">Ville<input name="city" maxlength="100" placeholder="Ex. Montreuil, Versailles…"></label><label class="field">Secteur de projet<select name="sector" data-catalog="sectors"><option value="">Tous les secteurs</option></select></label><label class="field" id="directory-arrondissement" hidden>Arrondissement de Paris<select name="arrondissement" data-catalog="arrondissements" disabled><option value="">Tous les arrondissements</option></select></label></div></details>
     </form>
     <div class="directory-toolbar" id="resultats"><p id="directory-count" role="status">Le répertoire se prépare.</p><div class="directory-actions"><button class="text-link" id="show-favorites" type="button" aria-pressed="false">Mes favoris <span id="favorite-count">0</span></button><button class="text-link" id="reset-directory" type="button">Réinitialiser</button></div></div>
     <p class="form-status" id="directory-status" role="status"></p>
     <noscript><p>Activez JavaScript pour utiliser les filtres et les favoris.</p></noscript>
     <div class="member-grid" id="directory-results"></div>
-    <section class="private-draft-section" id="private-draft-section" hidden><div class="section-heading"><div><p class="eyebrow">JUSTE POUR VOUS</p><h2>Votre fiche en préparation.</h2></div><a class="text-link" href="inscription.html?reprendre=1">Reprendre mon brouillon ↗</a></div><div class="private-draft-card" id="private-draft-card"></div><p>Ce brouillon reste sur cet appareil. Il n’est ni publié ni ajouté aux résultats.</p></section>
+    <section class="private-draft-section" id="private-draft-section" hidden><div class="section-heading"><div><p class="eyebrow">JUSTE POUR VOUS</p><h2>Votre fiche en préparation.</h2></div><a class="text-link" href="inscription.html?reprendre=1">Reprendre mon brouillon</a></div><div class="private-draft-card" id="private-draft-card"></div><p>Ce brouillon reste sur cet appareil. Il n’est ni publié ni ajouté aux résultats.</p></section>
   </main>
   <dialog class="member-dialog" id="member-dialog"><div class="dialog-top"><span>Fiche Kairos</span><button id="close-member-dialog" type="button" aria-label="Fermer le profil">×</button></div><div id="member-detail"></div></dialog>
   <footer class="site-footer">
   <div class="page-width footer-content">
     <div class="footer-intro"><a class="footer-name" href="index.html" aria-label="Kairos, accueil">KAIROS</a><p>Les bonnes rencontres.<br><em>Les projets de demain.</em></p><span>Paris & Île-de-France · Liste d’attente</span></div>
     <nav class="footer-column" aria-label="Explorer Kairos"><h2>Explorer</h2><a href="index.html#concept">Le concept</a><a href="profils.html">Les profils</a><a href="index.html#offres">Les offres</a><a href="index.html#previsions">Masterclass & ateliers</a></nav>
-    <nav class="footer-column" aria-label="Informations et données"><h2>Vos informations</h2><a href="confidentialite.html">Comment sont gérées mes données ?</a><a href="confidentialite.html#visibilite">La visibilité de mon profil</a><a href="confidentialite.html#vos-choix">Modifier ou supprimer mes données</a></nav>
-    <div class="footer-column" id="contact"><h2>Une question ?</h2><a class="footer-email" href="mailto:kairos.contact01@gmail.com">kairos.contact01@gmail.com <span aria-hidden="true">↗</span></a><p>Pour parler du projet, de votre compte ou de vos données, écrivez à l’équipe Kairos.</p></div>
-    <div class="footer-utility"><small>© 2026 Kairos</small><div><a href="index.html">Retour à l’accueil</a><a href="#haut">Haut de page <span aria-hidden="true">↑</span></a></div></div>
+    <nav class="footer-column" aria-label="Informations et données"><h2>Vos informations</h2><a href="admin.html" data-admin-link hidden>Administration</a><a href="confidentialite.html">Comment sont gérées mes données ?</a><a href="confidentialite.html#visibilite">La visibilité de mon profil</a><a href="confidentialite.html#vos-choix">Modifier ou supprimer mes données</a></nav>
+    <div class="footer-column" id="contact"><h2>Une question ?</h2><a class="footer-email" href="mailto:kairos.contact01@gmail.com">kairos.contact01@gmail.com </a><p>Pour parler du projet, de votre compte ou de vos données, écrivez à l’équipe Kairos.</p></div>
+    <div class="footer-utility"><small>© 2026 Kairos</small><div><a href="index.html">Retour à l’accueil</a><a href="#haut">Haut de page </a></div></div>
   </div>
 </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="config.js" defer></script><script src="script.js" defer></script>
+  <script src="config.js" defer></script><script src="script.js?v=profil-20261025-3" defer></script>
 </body>
 </html>
