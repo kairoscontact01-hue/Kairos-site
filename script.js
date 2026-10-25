@@ -10,7 +10,7 @@
    * Aucune clé secrète Clerk ou Resend dans ce fichier.
    */
   const CONFIG = {
-    clerkPublishableKey: "",
+    clerkPublishableKey: "pk_test_YWJvdmUtZXNjYXJnb3QtMTIzMi5jbGVyay5hY2NvdW50cy5kZXYk",
     apiBase: ""
   };
 
