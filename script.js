@@ -185,7 +185,14 @@
         const user = clerkClient.session ? clerkClient.user : null;
         syncAccountUI(user);
         const userId = user?.id || null;
-        if (userId !== previousUserId) { previousUserId = userId; document.dispatchEvent(new CustomEvent("kairos-account", { detail: { userId } })); }
+        if (userId !== previousUserId) {
+          previousUserId = userId;
+          document.querySelectorAll("[data-admin-link]").forEach(link => { link.hidden = true; });
+          document.dispatchEvent(new CustomEvent("kairos-account", { detail: { userId } }));
+          if (userId) fetchJSON("/api/admin/session").then(result => {
+            if (clerkClient?.session && clerkClient.user?.id === userId && result.administrator === true) document.querySelectorAll("[data-admin-link]").forEach(link => { link.hidden = false; });
+          }).catch(() => {});
+        }
         document.querySelectorAll(".header-account").forEach((button) => { button.hidden = Boolean(user); });
         document.querySelectorAll("[data-account]").forEach((button) => { button.disabled = false; });
         if (userButton) {
@@ -206,6 +213,11 @@
           byId("account-step").textContent = user ? "COMPTE CONNECTÉ" : "01 / VOTRE COMPTE";
           const profileState = document.body.dataset.profileState;
           byId("account-status").textContent = user ? profileState === "saved" ? "Votre compte est connecté et votre préinscription est enregistrée." : profileState === "editing" ? "Vous modifiez votre fiche enregistrée." : ["waiting", "loading"].includes(profileState) ? "Votre compte est connecté. Nous récupérons votre fiche." : profileState === "error" ? "Votre compte est connecté. Votre fiche n’a pas pu être récupérée." : `Connecté${user.firstName ? ` en tant que ${user.firstName}` : ""}. Vous pouvez compléter votre profil ci-dessous.` : "Créez votre compte sécurisé ou connectez-vous. Le questionnaire s’affichera ensuite, ici même.";
+          if (page === "admin" && !user) {
+            byId("account-title").textContent = "Connectez-vous à l’espace équipe.";
+            byId("account-step").textContent = "ÉQUIPE KAIROS";
+            byId("account-status").textContent = "Utilisez votre compte Kairos autorisé pour consulter les préinscriptions privées.";
+          }
           const form = byId("registration-form");
           if (user && form) {
             const values = { firstName: user.firstName, lastName: user.lastName, email: user.primaryEmailAddress?.emailAddress };
@@ -246,7 +258,7 @@
     });
     document.querySelectorAll("[data-register]").forEach((control) => control.addEventListener("click", (event) => { event.preventDefault(); close(); navigateToRegistration(control.dataset.role); }));
   }
-  function renderOwnProfile(data, metadata = {}) {
+  function renderOwnProfile(data, metadata = {}, context = "owner") {
     const savedData = cleanDraft(data);
       byId("saved-profile-title").textContent = `${savedData.firstName} ${savedData.lastName}`.trim() || "Votre profil Kairos";
       const date = new Date(metadata.updatedAt || "");
@@ -256,12 +268,13 @@
       const portrait = el("div", "own-profile-photo");
       Object.assign(portrait.style, { position: "relative", aspectRatio: "1.1", overflow: "hidden" });
       const initials = el("span", "", [savedData.firstName, savedData.lastName].filter(Boolean).map(name => Array.from(name)[0]).join("")); portrait.append(initials);
-      if (savedData.photoUrl) { const img = el("img"); img.src = savedData.photoUrl; img.alt = "Votre photo de profil"; img.width = 260; img.height = 236; Object.assign(img.style, { position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }); img.addEventListener("error", () => img.remove()); portrait.append(img); }
+      if (savedData.photoUrl) { const img = el("img"); img.src = savedData.photoUrl; img.alt = context === "admin" ? "Photo de profil" : "Votre photo de profil"; img.width = 260; img.height = 236; Object.assign(img.style, { position: "absolute", inset: "0", width: "100%", height: "100%", objectFit: "cover" }); img.addEventListener("error", () => img.remove()); portrait.append(img); }
       identity.append(portrait, el("h3", "", `${savedData.firstName} ${savedData.lastName}`.trim()), el("p", "own-profile-role", ROLES[savedData.role] || "Membre Kairos"));
       if (savedData.headline) identity.append(el("p", "", savedData.headline));
       identity.append(el("p", "", [savedData.city, savedData.department].filter(Boolean).join(" · ")));
       byId("saved-profile-card").replaceChildren(identity);
       byId("saved-profile-visibility").textContent = metadata.published === true && savedData.publicConsent ? "Votre fiche est publiée avec votre accord. Les informations privées ci-contre sont visibles uniquement dans votre espace personnel." : savedData.publicConsent ? "Vous avez autorisé la publication. Votre fiche attend la validation de l’équipe et n’est pas encore publique." : "Votre fiche reste privée. Vous n’avez pas autorisé sa publication.";
+      if (context === "admin") byId("saved-profile-visibility").textContent = metadata.published === true && savedData.publicConsent ? "Fiche publiée avec l’accord de la personne. Les réponses détaillées restent privées." : savedData.publicConsent ? "Publication autorisée par la personne. Fiche en attente de validation, non publique." : "Fiche privée. La personne n’a pas autorisé sa publication.";
       const content = byId("saved-profile-information"); content.replaceChildren();
       const groups = [
         ["Votre parcours", [["Nom et prénom", `${savedData.firstName} ${savedData.lastName}`], ["E-mail privé", savedData.email], ["Âge", `${savedData.age} ans`], ["Votre rôle", ROLES[savedData.role]], ["Présentation", savedData.headline], ["À propos", savedData.bio], ["Situation", savedData.professionalStatus], ["Études", [savedData.educationLevel, savedData.studyField].filter(Boolean).join(" · ")], ["Établissement privé", savedData.school], ["Expérience", savedData.experience], ["Domaines de travail", savedData.workFields.join(", ")], ["Compétences", savedData.skills], ["Disponibilité", savedData.availability]]],
@@ -270,7 +283,7 @@
       ];
       if (savedData.role === "investor") groups.splice(2, 0, ["Vos préférences d’investissement", [["Tranches", savedData.investmentRanges.join(", ")], ["Secteurs", savedData.investmentSectors], ["Types de projets", savedData.investmentProjectTypes], ["Montant envisagé", savedData.investmentAmount], ["Intention rendue publique", savedData.showInvestmentIntent ? "Oui" : "Non"], ["Montant et tranches rendus publics", savedData.showInvestmentAmount ? "Oui" : "Non"]]]);
       for (const [title, entries] of groups) {
-        const section = el("section", "saved-information-section"); section.append(el("h3", "", title)); const dl = el("dl", "review-summary");
+        const section = el("section", "saved-information-section"); section.append(el("h3", "", context === "admin" ? title.replace(/^Votre /, "").replace(/^Vos /, "").replace("et vos envies", "et envies") : title)); const dl = el("dl", "review-summary");
         for (const [label, value] of entries.filter(([, value]) => value)) { const row = el("div", "review-row"); row.append(el("dt", "", label), el("dd", "", value)); dl.append(row); }
         section.append(dl); content.append(section);
       }
@@ -351,7 +364,7 @@
       byId("draft-banner").hidden = next !== "new" || !storedDraft();
       byId("edit-profile-notice").hidden = next !== "editing";
       form.inert = !clerkClient?.session || !["new", "editing"].includes(next);
-      byId("submit-registration").textContent = savedData ? "Enregistrer mes modifications ↗" : "Envoyer ma préinscription ↗";
+      byId("submit-registration").textContent = savedData ? "Enregistrer mes modifications" : "Envoyer ma préinscription";
       if (offer) offer.hidden = !selectedPlan || next === "saved";
       if (clerkClient?.session) {
         byId("account-status").textContent = next === "saved" ? "Votre compte est connecté et votre préinscription est enregistrée." : next === "loading" ? "Votre compte est connecté. Nous récupérons votre fiche." : next === "editing" ? "Vous modifiez votre fiche. Les changements seront enregistrés après votre confirmation." : next === "error" ? "Votre compte est connecté. Votre fiche n’a pas pu être récupérée." : "Votre compte est prêt. Vous pouvez compléter votre profil ci-dessous.";
@@ -480,7 +493,7 @@
       byId("directory-results").replaceChildren(); byId("favorite-count").textContent = favoriteIds.size;
       byId("directory-count").textContent = profiles.length ? `${shown.length} profil${shown.length > 1 ? "s" : ""}${onlyFavorites ? " en favoris" : " disponible" + (shown.length > 1 ? "s" : "")}` : "Aucun profil public disponible";
       if (shown.length) shown.forEach((p) => byId("directory-results").append(makeCard(p)));
-      else { const empty = el("div", "directory-empty"); empty.append(el("span", "", onlyFavorites ? "♡" : "↗"), el("h2", "", onlyFavorites ? "Votre sélection est encore vide." : profiles.length ? "Aucun profil pour ces critères." : "Les premières rencontres se préparent."), el("p", "", profiles.length ? "Essayez d’autres critères ou ajoutez des profils à vos favoris." : "Préparez votre fiche sur liste d’attente. Seules les personnes ayant autorisé la publication pourront être présentées ici.")); const link = el("a", "button button-outline", clerkClient?.session ? "Voir mon profil ↗" : "Créer mon compte ↗"); link.href = clerkClient?.session ? "mon-profil.html" : "inscription.html"; empty.append(link); byId("directory-results").append(empty); }
+      else { const empty = el("div", "directory-empty"); empty.append(el("h2", "", onlyFavorites ? "Votre sélection est encore vide." : profiles.length ? "Aucun profil pour ces critères." : "Les premières rencontres se préparent."), el("p", "", profiles.length ? "Essayez d’autres critères ou ajoutez des profils à vos favoris." : "Préparez votre fiche sur liste d’attente. Seules les personnes ayant autorisé la publication pourront être présentées ici.")); const link = el("a", "button button-outline", clerkClient?.session ? "Voir mon profil" : "Créer mon compte"); link.href = clerkClient?.session ? "mon-profil.html" : "inscription.html"; empty.append(link); byId("directory-results").append(empty); }
       byId("directory-status").textContent = available ? "Seules les fiches publiées avec consentement sont présentées." : "Le répertoire se prépare. Vous pouvez déjà préparer votre fiche. Votre brouillon reste privé.";
     }
     const local = storedDraft(); if (local) byId("private-draft-card").append(makeCard(previewProfile(local)));
@@ -532,6 +545,12 @@
   fillCatalogs();
   const closeHeader = initHeader();
   const accountsReady = initAccounts();
+  window.KAIROS_APP = Object.freeze({
+    ready: accountsReady,
+    fetchJSON,
+    renderOwnProfile,
+    getUserId: () => clerkClient?.session ? clerkClient.user?.id || null : null
+  });
   if (page === "landing") initLanding();
   if (page === "registration") initRegistration();
   if (page === "profile") initOwnProfile();
