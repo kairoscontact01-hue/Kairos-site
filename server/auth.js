@@ -9,7 +9,7 @@ function origins() {
 let client;
 function clerk() {
   const secretKey = process.env.CLERK_SECRET_KEY;
-  const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.Clerk_publishable_key;
   if (!secretKey || !publishableKey) throw new HttpError(503, 'AUTH_NOT_CONFIGURED', 'La connexion au serveur n’est pas configurée. Kairos doit ajouter ses deux clés Clerk dans Vercel puis redéployer le site.');
   return client ||= createClerkClient({ secretKey, publishableKey });
 }
