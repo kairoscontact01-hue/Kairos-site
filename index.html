@@ -3,80 +3,969 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f5ef">
-  <meta name="description" content="Trouvez votre futur associé sur Kairos. Profils, projets et rencontres entre entrepreneurs en Île-de-France. Découvrez les offres et préparez votre profil sur la liste d’attente.">
-  <title>Kairos — Une rencontre. Un projet. Une aventure commune.</title>
+  <meta name="theme-color" content="#faf6ef">
+  <meta name="description" content="Kairos, le point de rencontre des personnes qui veulent entreprendre ensemble. Préparez votre profil et rejoignez la liste d’attente en Île-de-France.">
+  <title>Kairos — Entreprendre, ensemble.</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://images.unsplash.com">
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261024-3">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
 </head>
-<body data-page="landing">
+
+<body>
   <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+  <!-- Le même en-tête pour tout le site. -->
   <header class="site-header">
-    <div class="site-header-inner">
-      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="main-nav"><span></span><span></span></button>
-      <nav class="main-nav" id="main-nav" aria-label="Navigation principale">
-        <div class="nav-links">
-          <a href="index.html#concept">Le concept</a>
-          <a href="profils.html">Les profils</a>
-          <a href="index.html#offres">Les tarifs</a>
-          <a class="mobile-favorites" href="profils.html?favoris=1">Mes favoris</a>
-        </div>
-        <form class="header-search" id="header-search" action="profils.html" method="get" role="search">
-          <label class="sr-only" for="header-query">Rechercher un profil ou une compétence</label>
-          <input id="header-query" name="q" type="search" maxlength="120" placeholder="Un profil, une compétence…">
-          <button type="submit" class="header-search-submit" aria-label="Rechercher"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4.5 4.5"></path></svg></button>
-        </form>
+    <div class="header-inner">
+      <button
+        class="menu-button"
+        id="menu-button"
+        type="button"
+        aria-label="Ouvrir le menu"
+        aria-expanded="false"
+        aria-controls="navigation"
+      >
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="navigation" id="navigation" aria-label="Navigation principale">
+        <a href="#concept">Le concept</a>
+        <a href="#profils">Les profils</a>
+        <a href="#offres">Les tarifs</a>
       </nav>
-      <a class="header-favorites" href="profils.html?favoris=1" aria-label="Voir mes favoris"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20.4 5.6a5.5 5.5 0 0 0-7.8 0l-.6.6-.6-.6a5.5 5.5 0 0 0-7.8 7.8L12 21l8.4-7.6a5.5 5.5 0 0 0 0-7.8Z"></path></svg></a>
-      <button class="button button-quiet header-account" type="button" data-account="sign-in" hidden>Connexion</button>
-      <div id="clerk-user-button" class="header-user" hidden></div>
-      <a class="button button-primary button-small header-register" href="inscription.html">Me préinscrire <span aria-hidden="true">↗</span></a>
-      <a class="brand" href="index.html" aria-label="Kairos, accueil"><img src="assets/kairos-logo.png" alt="Kairos" width="1254" height="1254"></a>
+
+      <form class="header-search" id="header-search" role="search">
+        <label class="sr-only" for="search">Rechercher un profil</label>
+        <input
+          id="search"
+          type="search"
+          maxlength="120"
+          placeholder="Un profil, une compétence…"
+        >
+        <button type="submit" aria-label="Rechercher">↗</button>
+      </form>
+
+      <a class="favorites-link" id="favorites-link" href="#profils">
+        Mes favoris
+      </a>
+
+      <button
+        class="login-button"
+        type="button"
+        data-auth="sign-in"
+        hidden
+      >
+        Connexion
+      </button>
+
+      <div id="user-button" hidden></div>
+
+      <a class="button header-cta" href="#inscription">
+        Me préinscrire <span aria-hidden="true">↗</span>
+      </a>
+
+      <a class="brand" href="#accueil" aria-label="Kairos, accueil">
+        <img
+          src="assets/kairos-logo.png"
+          alt="Kairos"
+          width="1003"
+          height="873"
+        >
+      </a>
     </div>
   </header>
+
   <main id="contenu">
-    <section class="hero page-width" id="accueil" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow hero-eyebrow"><span class="status-dot" aria-hidden="true"></span> LE POINT DE RENCONTRE DES FUTURS ASSOCIÉS</p>
-        <h1 id="hero-title">Entreprendre,<br><em>ensemble.</em></h1>
-        <p class="hero-lead">Trouvez votre futur associé. Présentez votre idée, vos compétences et vos envies pour rencontrer les personnes avec qui entreprendre en Île-de-France.</p>
-        <div class="hero-actions"><a class="button button-primary" href="inscription.html">Préparer mon profil <span aria-hidden="true">↗</span></a><a class="text-link" href="#concept">L’esprit Kairos <span aria-hidden="true">↓</span></a></div>
-        <p class="hero-location">Paris & Île-de-France <span aria-hidden="true">—</span> Liste d’attente</p>
+    <!-- ACCUEIL -->
+    <div id="page-home" data-page>
+      <section class="hero wrap" id="accueil">
+        <div class="hero-copy">
+          <p class="eyebrow">
+            LE POINT DE RENCONTRE DES FUTURS ASSOCIÉS
+          </p>
+
+          <h1>Entreprendre,<br><em>ensemble.</em></h1>
+
+          <p class="hero-lead">
+            Trouvez votre futur associé. Présentez votre idée,
+            vos compétences et vos envies pour rencontrer les personnes
+            avec qui entreprendre en Île-de-France.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button" href="#inscription">
+              Préparer mon profil <span aria-hidden="true">↗</span>
+            </a>
+
+            <a class="text-link" href="#concept">
+              L’esprit Kairos <span aria-hidden="true">↓</span>
+            </a>
+          </div>
+
+          <p class="location-line">
+            Paris & Île-de-France — Liste d’attente
+          </p>
+        </div>
+
+        <figure class="hero-photo">
+          <img
+            src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1300&q=85"
+            alt="Des personnes échangent autour d’une table de travail"
+            width="1300"
+            height="1100"
+            fetchpriority="high"
+          >
+
+          <figcaption>
+            <span>
+              Une idée prend une autre dimension<br>
+              <strong>quand on la partage.</strong>
+            </span>
+
+            <a
+              href="https://unsplash.com/photos/hCb3lIB8L8E"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Photo d’illustration · Annie Spratt
+            </a>
+          </figcaption>
+        </figure>
+      </section>
+
+      <div class="entry-links wrap">
+        <button type="button" data-register="founder">
+          <small>01</small>
+          <span>J’ai une idée à développer</span>
+          <b aria-hidden="true">↗</b>
+        </button>
+
+        <button type="button" data-register="partner">
+          <small>02</small>
+          <span>Je cherche un projet à rejoindre</span>
+          <b aria-hidden="true">↗</b>
+        </button>
+
+        <button type="button" data-register="investor">
+          <small>03</small>
+          <span>Je souhaite investir</span>
+          <b aria-hidden="true">↗</b>
+        </button>
       </div>
-      <figure class="hero-photo">
-        <div class="hero-image-wrap"><img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&amp;fit=crop&amp;w=1300&amp;q=85" alt="Un groupe échange autour d’une table de travail" width="1300" height="1100" fetchpriority="high"></div>
-        <figcaption><span>Une idée prend une autre dimension<br><strong>quand on la partage.</strong></span><a href="https://unsplash.com/photos/hCb3lIB8L8E" target="_blank" rel="noreferrer">Photo d’illustration · Annie Spratt ↗</a></figcaption>
-      </figure>
-    </section>
-    <div class="opening-line page-width" aria-label="Choisir mon parcours">
-      <button class="entry-link" type="button" data-register data-role="founder"><span class="entry-num">01</span><span>J’ai une idée à développer</span><span aria-hidden="true">↗</span></button>
-      <button class="entry-link" type="button" data-register data-role="partner"><span class="entry-num">02</span><span>Je cherche un projet à rejoindre</span><span aria-hidden="true">↗</span></button>
-      <button class="entry-link" type="button" data-register data-role="investor"><span class="entry-num">03</span><span>Je souhaite investir</span><span aria-hidden="true">↗</span></button>
+
+      <section class="section manifesto wrap" id="concept">
+        <p class="eyebrow">POURQUOI KAIROS ?</p>
+
+        <div>
+          <h2>Une rencontre,<br><em>un vrai point de départ.</em></h2>
+
+          <div class="two-columns">
+            <p>
+              Une bonne association commence par des attentes claires :
+              ce que vous savez faire, ce que vous souhaitez construire
+              et le temps que vous pouvez y consacrer.
+            </p>
+
+            <p>
+              Kairos réunit ces informations dans un même espace
+              pour vous aider à découvrir des profils complémentaires.
+              Et donner à votre prochaine rencontre une chance
+              de devenir un projet commun.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="dark-section section">
+        <div class="wrap">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">VOTRE PLACE DANS L’AVENTURE</p>
+              <h2>Il y a plusieurs façons<br><em>de commencer.</em></h2>
+            </div>
+
+            <p>
+              Une idée, un savoir-faire ou l’envie d’accompagner :
+              commencez par ce qui vous ressemble.
+            </p>
+          </div>
+
+          <div class="role-grid">
+            <article>
+              <span class="role-number">01</span>
+              <h3>Apporteur d’idée</h3>
+              <p>
+                Présentez votre projet, son avancement et
+                les compétences qui vous manquent.
+              </p>
+              <button class="text-link" type="button" data-register="founder">
+                Présenter mon projet ↗
+              </button>
+            </article>
+
+            <article>
+              <span class="role-number">02</span>
+              <h3>Futur associé</h3>
+              <p>
+                Partagez votre parcours, vos compétences et
+                les projets que vous aimeriez rejoindre.
+              </p>
+              <button class="text-link" type="button" data-register="partner">
+                Présenter mon profil ↗
+              </button>
+            </article>
+
+            <article>
+              <span class="role-number">03</span>
+              <h3>Investisseur</h3>
+              <p>
+                Indiquez vos secteurs et vos préférences.
+                Vous choisissez les informations rendues publiques.
+              </p>
+              <button class="text-link" type="button" data-register="investor">
+                Préparer mon profil ↗
+              </button>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">COMMENT ÇA SE PASSE ?</p>
+            <h2>Se présenter.<br><em>Puis se trouver.</em></h2>
+          </div>
+        </div>
+
+        <div class="steps-grid">
+          <article>
+            <span>01</span>
+            <h3>Parlez de vous.</h3>
+            <p>
+              Votre parcours, vos études, vos compétences
+              et ce qui vous donne envie d’entreprendre.
+            </p>
+          </article>
+
+          <article>
+            <span>02</span>
+            <h3>Précisez vos envies.</h3>
+            <p>
+              Votre secteur, votre projet, votre localisation
+              et les personnes avec qui vous aimeriez travailler.
+            </p>
+          </article>
+
+          <article>
+            <span>03</span>
+            <h3>Préparez vos rencontres.</h3>
+            <p>
+              À l’ouverture du répertoire, découvrez les profils
+              publiés, enregistrez vos favoris et manifestez votre intérêt.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section pricing-section" id="offres">
+        <div class="wrap">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">LES OFFRES PRÉVUES</p>
+              <h2>À chaque étape,<br><em>son coup de pouce.</em></h2>
+            </div>
+
+            <p>
+              Quatre semaines d’essai gratuit prévues.
+              Puis une facturation toutes les quatre semaines,
+              soit tous les 28 jours.
+            </p>
+          </div>
+
+          <div class="free-line">
+            <span>Pour commencer, <strong>c’est gratuit.</strong></span>
+            <p>0 € · Profil, recherche de base et premiers échanges prévus.</p>
+          </div>
+
+          <div class="pricing-grid">
+            <article class="price-card">
+              <p class="eyebrow">01 / ÉTUDIANT</p>
+              <h3>Premium étudiant</h3>
+              <p class="price">3,99 <span>€</span></p>
+              <p class="period">toutes les 4 semaines, après l’essai</p>
+
+              <ul>
+                <li>Filtres avancés</li>
+                <li>Recommandations de profils</li>
+                <li>Mise en avant du profil</li>
+                <li>Événements exclusifs</li>
+              </ul>
+
+              <button class="button button-outline" type="button" data-plan="student">
+                Cette offre m’intéresse ↗
+              </button>
+            </article>
+
+            <article class="price-card featured">
+              <p class="eyebrow">02 / CLASSIQUE</p>
+              <h3>Premium classique</h3>
+              <p class="price">9,99 <span>€</span></p>
+              <p class="period">toutes les 4 semaines, après l’essai</p>
+
+              <ul>
+                <li>Filtres avancés</li>
+                <li>Recommandations de profils</li>
+                <li>Mise en avant du profil</li>
+                <li>Événements exclusifs</li>
+              </ul>
+
+              <button class="button button-peach" type="button" data-plan="classic">
+                Cette offre m’intéresse ↗
+              </button>
+            </article>
+
+            <article class="price-card">
+              <p class="eyebrow">03 / ACCOMPAGNEMENT</p>
+              <h3>Premium VIP</h3>
+              <p class="price">19,99 <span>€</span></p>
+              <p class="period">toutes les 4 semaines, après l’essai</p>
+
+              <ul>
+                <li>Toutes les fonctionnalités Premium</li>
+                <li>Accompagnement personnalisé envisagé</li>
+                <li>Modalités et intervenants à confirmer</li>
+              </ul>
+
+              <button class="button button-outline" type="button" data-plan="vip">
+                Cette offre m’intéresse ↗
+              </button>
+            </article>
+          </div>
+
+          <p class="small-note">
+            Tarifs et prestations prévisionnels.
+            Aucun paiement n’est effectué sur ce site.
+            Les conditions de souscription, de renouvellement
+            et d’annulation seront présentées avant activation.
+          </p>
+        </div>
+      </section>
+
+      <section class="section wrap">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">CE QUE NOUS PRÉPARONS</p>
+            <h2>Des rencontres.<br><em>Et de quoi avancer.</em></h2>
+          </div>
+
+          <p>
+            Masterclass, ateliers, mentorat et échanges avec
+            des personnes qui connaissent les questions
+            que l’on se pose en entreprenant.
+          </p>
+        </div>
+
+        <div class="two-columns workshops">
+          <div>
+            <h3>Apprendre à construire ensemble.</h3>
+            <p>
+              Trouver son associé, répartir les parts,
+              transformer une idée en business plan
+              et préparer ses échanges avec des investisseurs.
+            </p>
+            <p class="small-note">
+              Formats prévisionnels. Les intervenants et
+              les modalités seront précisés à leur confirmation.
+            </p>
+          </div>
+
+          <div class="workshop-prices">
+            <p><span>Masterclass collective</span><strong>15 €</strong></p>
+            <p><span>Atelier pratique</span><strong>25 €</strong></p>
+            <p><span>Pack de 3 masterclass</span><strong>35 €</strong></p>
+            <small>Prix envisagés par personne. Inscriptions non ouvertes.</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="invitation wrap">
+        <div>
+          <p class="eyebrow">LA LISTE D’ATTENTE KAIROS</p>
+          <h2>La suite commence<br><em>par vous.</em></h2>
+        </div>
+
+        <div>
+          <p>
+            Préparez votre fiche pour les futures rencontres.
+            Vos informations restent privées tant que vous
+            n’autorisez pas leur publication.
+          </p>
+          <a class="button" href="#inscription">
+            Préparer mon profil ↗
+          </a>
+          <small>Aucun paiement à cette étape.</small>
+        </div>
+      </section>
+
+      <section class="section wrap faq">
+        <div>
+          <p class="eyebrow">ON VOUS RÉPOND</p>
+          <h2>Avant de<br><em>se rencontrer.</em></h2>
+        </div>
+
+        <div class="faq-list">
+          <details>
+            <summary>Faut-il déjà avoir une idée ?</summary>
+            <p>
+              Non. Vous pouvez présenter un projet ou simplement
+              votre envie de rejoindre une aventure.
+            </p>
+          </details>
+
+          <details>
+            <summary>Qui pourra voir ma fiche ?</summary>
+            <p>
+              Votre brouillon reste privé. La publication dans
+              le répertoire nécessite votre accord.
+              Votre e-mail et votre nom complet n’y sont pas affichés.
+            </p>
+          </details>
+
+          <details>
+            <summary>Dans quelle région commence Kairos ?</summary>
+            <p>
+              En Île-de-France, avec une recherche par département,
+              ville et arrondissement pour Paris.
+            </p>
+          </details>
+
+          <details>
+            <summary>Les abonnements sont-ils déjà disponibles ?</summary>
+            <p>
+              Non. Les offres présentées sont prévisionnelles.
+              La préinscription ne déclenche aucun abonnement.
+            </p>
+          </details>
+        </div>
+      </section>
     </div>
 
-    <section class="section page-width manifesto" id="concept"><p class="eyebrow">POURQUOI KAIROS ?</p><div><h2>Une rencontre,<br><em>un vrai point de départ.</em></h2><div class="manifesto-copy"><p>Une bonne association commence par des attentes claires. Ce que vous savez faire, ce que vous souhaitez construire, le temps que vous pouvez y consacrer.</p><p>Kairos réunit ces informations dans un même espace pour vous aider à découvrir des profils complémentaires. Et donner à votre prochaine rencontre une chance de devenir un projet commun.</p></div></div></section>
+    <!-- PRÉINSCRIPTION -->
+    <section class="page-section wrap" id="page-registration" data-page hidden>
+      <div class="page-heading">
+        <p class="eyebrow">PRÉINSCRIPTION · LISTE D’ATTENTE</p>
+        <h1>Un projet commence<br><em>par vous.</em></h1>
+        <p>
+          Quelques questions pour présenter votre parcours,
+          vos compétences et vos envies.
+          Aucun paiement ne vous sera demandé.
+        </p>
+      </div>
 
-    <section class="section audience-section" id="parcours"><div class="page-width"><div class="section-heading"><div><p class="eyebrow">ET VOUS, OÙ EN ÊTES-VOUS ?</p><h2>Il y a plusieurs façons<br><em>de commencer.</em></h2></div><p>Pas besoin d’avoir déjà tout prévu.<br>Commencez par ce qui vous ressemble.</p></div><div class="audience-layout"><div class="audience-tabs" role="tablist" aria-label="Votre parcours" aria-orientation="vertical"><button id="audience-founder" class="audience-tab" role="tab" aria-selected="true" aria-controls="panel-founder" data-audience="founder"><span>01</span> J’ai un projet <b aria-hidden="true">↗</b></button><button id="audience-partner" class="audience-tab" role="tab" aria-selected="false" aria-controls="panel-partner" tabindex="-1" data-audience="partner"><span>02</span> Je veux rejoindre un projet <b aria-hidden="true">↗</b></button><button id="audience-investor" class="audience-tab" role="tab" aria-selected="false" aria-controls="panel-investor" tabindex="-1" data-audience="investor"><span>03</span> Je souhaite investir <b aria-hidden="true">↗</b></button></div><div class="audience-content"><article id="panel-founder" role="tabpanel" aria-labelledby="audience-founder" tabindex="0"><span class="panel-kicker">DE L’IDÉE À L’ÉQUIPE</span><h3>Votre idée mérite<br>les bonnes compétences.</h3><p>Présentez votre projet, sa catégorie et son avancement. Dites qui vous recherchez : un associé, un développeur, un partenaire commercial ou un investisseur.</p><button class="text-link" type="button" data-register data-role="founder">Présenter mon projet <span aria-hidden="true">→</span></button></article><article id="panel-partner" role="tabpanel" aria-labelledby="audience-partner" tabindex="0" hidden><span class="panel-kicker">DE L’ENVIE À L’AVENTURE</span><h3>Vos compétences peuvent<br>faire la différence.</h3><p>Vous avez envie d’entreprendre, sans forcément avoir d’idée précise ? Présentez votre parcours, vos secteurs d’intérêt et la collaboration que vous recherchez.</p><button class="text-link" type="button" data-register data-role="partner">Présenter mon profil <span aria-hidden="true">→</span></button></article><article id="panel-investor" role="tabpanel" aria-labelledby="audience-investor" tabindex="0" hidden><span class="panel-kicker">DES CONVICTIONS AUX PROJETS</span><h3>Découvrez des projets<br>qui vous correspondent.</h3><p>Précisez vos secteurs, les types de projets et les tranches d’investissement envisagées. Vous choisissez de rendre publique votre intention d’investir, ainsi que votre montant éventuel.</p><button class="text-link" type="button" data-register data-role="investor">Créer mon profil investisseur <span aria-hidden="true">→</span></button></article></div></div></div></section>
+      <section class="account-panel" id="account-panel" hidden>
+        <div>
+          <h2>Votre compte Kairos</h2>
+          <p id="account-status"></p>
+        </div>
 
-    <section class="section page-width journey" id="fonctionnement"><div class="section-heading"><div><p class="eyebrow">PRENDRE LE TEMPS DE BIEN SE TROUVER</p><h2>Un profil clair.<br><em>Des rencontres plus pertinentes.</em></h2></div></div><div class="journey-grid"><article><span class="step-number">01</span><h3>Parlez de vous.</h3><p>Votre expérience, vos compétences, votre projet ou votre envie d’entreprendre. Un questionnaire vous aide à formuler l’essentiel.</p></article><article><span class="step-number">02</span><h3>Affinez votre recherche.</h3><p>Secteur, profil, collaboration, région, département, ville et arrondissement parisien : commencez par les critères qui comptent pour vous.</p></article><article><span class="step-number">03</span><h3>Gardez le lien.</h3><p>Enregistrez vos annonces favorites et signalez votre intérêt. Le nombre de likes reste visible, sans afficher l’identité des personnes.</p></article></div></section>
+        <div class="account-actions" id="account-actions">
+          <button class="button button-outline" type="button" data-auth="sign-up">
+            Créer mon compte
+          </button>
+          <button class="text-link" type="button" data-auth="sign-in">
+            Me connecter
+          </button>
+        </div>
+      </section>
 
-    <section class="section pricing-section" id="offres"><div class="page-width"><div class="section-heading"><div><p class="eyebrow">LES OFFRES PRÉVUES AU LANCEMENT</p><h2>À chaque étape,<br><em>son coup de pouce.</em></h2></div><p>Quatre semaines d’essai gratuit prévues pour découvrir Premium. Puis une facturation toutes les quatre semaines, selon l’offre choisie.</p></div><div class="free-access"><span>Pour commencer, <strong>c’est gratuit.</strong></span><p><b>0 €</b> · Création du profil, recherche de base et premiers échanges.</p></div><div class="pricing-grid">
-      <article class="pricing-card"><p class="plan-index">01 / POUR LES ÉTUDIANTS</p><h3>Premium étudiant</h3><p class="plan-price">3,99 <span>€</span></p><p class="plan-period">toutes les 4 semaines, après l’essai</p><p class="plan-description">Les fonctionnalités Premium, avec un tarif réservé aux étudiants.</p><ul class="plan-features"><li>Filtres par compétences et disponibilité</li><li>Recommandations de profils compatibles</li><li>Mise en avant du profil</li><li>Accès à des événements exclusifs</li></ul><a class="button button-outline" href="#lancement" data-interest-plan="student">M’informer sur cette offre <span aria-hidden="true">↗</span></a></article>
-      <article class="pricing-card pricing-card-featured"><p class="plan-index">02 / POUR ALLER PLUS LOIN</p><h3>Premium classique</h3><p class="plan-price">9,99 <span>€</span></p><p class="plan-period">toutes les 4 semaines, après l’essai</p><p class="plan-description">Des outils pour affiner votre recherche et rendre votre profil plus visible.</p><ul class="plan-features"><li>Filtres par compétences et disponibilité</li><li>Recommandations de profils compatibles</li><li>Mise en avant du profil</li><li>Accès à des événements exclusifs</li></ul><a class="button button-primary" href="#lancement" data-interest-plan="classic">M’informer sur cette offre <span aria-hidden="true">↗</span></a></article>
-      <article class="pricing-card"><p class="plan-index">03 / POUR ÊTRE ACCOMPAGNÉ</p><h3>Premium VIP</h3><p class="plan-price">19,99 <span>€</span></p><p class="plan-period">toutes les 4 semaines, après l’essai</p><p class="plan-description">Les fonctionnalités Premium et un accompagnement personnalisé envisagé.</p><ul class="plan-features"><li>Tous les outils de Premium classique</li><li>Un accompagnement avec un entrepreneur ou un organisme d’appui</li><li>Modalités et intervenants à confirmer</li></ul><a class="button button-outline" href="#lancement" data-interest-plan="vip">M’informer sur cette offre <span aria-hidden="true">↗</span></a></article>
-    </div><p class="pricing-note">Tarifs et prestations prévisionnels, à tester auprès des premiers utilisateurs. Aucun paiement n’est effectué sur cette page. Les conditions de souscription, de renouvellement et d’annulation seront précisées avant activation.</p></div></section>
+      <div class="draft-banner" id="draft-banner" hidden>
+        <p>Une fiche est conservée sur cet appareil.</p>
+        <div>
+          <button class="text-link" id="restore-draft" type="button">
+            Reprendre mon brouillon
+          </button>
+          <button class="text-link" id="delete-draft" type="button">
+            Supprimer
+          </button>
+        </div>
+      </div>
 
-    <section class="section page-width upcoming" id="previsions"><div class="section-heading"><div><p class="eyebrow">CE QUE NOUS PRÉPARONS</p><h2>Se rencontrer.<br><em>Et apprendre à entreprendre.</em></h2></div><p>Un programme prévisionnel pour accompagner les premiers pas. Les formats, dates et intervenants seront annoncés à leur confirmation.</p></div><div class="upcoming-layout"><div class="workshop-copy"><span class="panel-kicker">MASTERCLASS & ATELIERS</span><h3>Les questions que l’on se pose.<br>Des personnes pour y répondre.</h3><p>Des rencontres en ligne avec des entrepreneurs, experts-comptables, avocats d’affaires et investisseurs.</p><ul class="topic-list"><li>Trouver son futur associé et éviter les mauvaises associations</li><li>Répartir les parts entre associés</li><li>Transformer une idée en business plan</li><li>Convaincre ses premiers investisseurs</li></ul></div><div class="workshop-prices"><div><span>Masterclass collective<small>Par personne</small></span><strong>15 €</strong></div><div><span>Atelier pratique<small>Avec exercices · par personne</small></span><strong>25 €</strong></div><div><span>Pack de 3 masterclass<small>Tarif groupé</small></span><strong>35 €</strong></div><p>Prix envisagés. Les inscriptions ne sont pas encore ouvertes.</p></div></div><div class="support-line"><h3>Et pour avancer avec un regard extérieur ?</h3><p>Nous prévoyons aussi du mentorat, des ateliers de pitch, des rencontres en petit comité et des mises en relation accompagnées. Les tarifs seront définis selon la prestation.</p></div><details class="partner-details"><summary>Des partenariats pour soutenir ces projets <span aria-hidden="true">+</span></summary><p>Le plan prévoit de rechercher quelques partenaires ciblés : banques professionnelles, outils de comptabilité, hébergeurs, coworkings et cabinets d’expertise comptable. Le soutien pourrait prendre la forme d’événements sponsorisés, de réductions ou de programmes d’accompagnement. Aucun partenariat n’est annoncé comme acquis.</p></details></section>
+      <div class="registration-layout" id="registration-layout">
+        <div>
+          <nav class="progress" aria-label="Étapes de votre fiche">
+            <button type="button" data-step="0" aria-current="step">
+              <span>01</span> Vous
+            </button>
+            <button type="button" data-step="1">
+              <span>02</span> Votre parcours
+            </button>
+            <button type="button" data-step="2">
+              <span>03</span> Votre projet
+            </button>
+            <button type="button" data-step="3">
+              <span>04</span> Votre fiche
+            </button>
+          </nav>
 
-    <section class="section page-width waitlist-section" id="lancement"><div><p class="eyebrow">LA LISTE D’ATTENTE KAIROS</p><h2>Préparez votre profil.<br><em>Faisons connaissance.</em></h2><p>Votre parcours, vos compétences, vos études et vos envies : une fiche pour préparer les rencontres à l’ouverture.</p></div><div class="registration-invitation"><p>Apporteur d’idée, futur associé ou investisseur : dites-nous ce que vous souhaitez construire et avec qui.</p><a class="button button-primary" href="inscription.html">Créer ma fiche de préinscription <span aria-hidden="true">↗</span></a><span>Liste d’attente · Aucun paiement · Compte sécurisé à venir</span><a class="text-link" href="profils.html">Découvrir l’espace profils →</a></div></section>
+          <form id="registration-form">
+            <noscript>
+              <p>Activez JavaScript pour compléter votre fiche.</p>
+            </noscript>
 
-    <section class="section page-width faq-section" id="faq"><div class="faq-heading"><p class="eyebrow">ON VOUS RÉPOND</p><h2>Avant de<br><em>se rencontrer.</em></h2><a class="text-link" href="mailto:kairos.contact01@gmail.com">Poser une question <span aria-hidden="true">↗</span></a></div><div class="faq-list"><details><summary>Faut-il déjà avoir une idée ?<span>+</span></summary><p>Non. Vous pouvez présenter un projet ou simplement l’envie de rejoindre une aventure. Vos compétences, vos centres d’intérêt et vos attentes donnent déjà un point de départ.</p></details><details><summary>Quelle différence entre l’accès gratuit et Premium ?<span>+</span></summary><p>L’accès gratuit prévu comprend le profil, la recherche de base et les premiers échanges. Premium prévoit des filtres par compétences et disponibilité, des recommandations, de la visibilité et l’accès à des événements exclusifs. Le VIP ajoute un accompagnement dont les modalités restent à confirmer.</p></details><details><summary>Pourquoi une facturation toutes les quatre semaines ?<span>+</span></summary><p>C’est le rythme prévu dans le modèle de lancement. Il correspond à une période de 28 jours et non à un mois calendaire. Le prix, la fin de l’essai et les conditions de renouvellement seront présentés avant toute souscription.</p></details><details><summary>Est-ce réservé aux étudiants ?<span>+</span></summary><p>Non. Kairos s’adresse aux porteurs de projets, futurs associés et investisseurs. Le tarif étudiant est une offre dédiée ; les formules classique et VIP s’adressent aux autres membres.</p></details><details><summary>Quelles informations les investisseurs rendent-ils publiques ?<span>+</span></summary><p>Chaque investisseur peut renseigner ses secteurs, ses types de projets et plusieurs tranches d’investissement. Il choisit de rendre publique ou non son intention d’investir et le montant envisagé.</p></details><details><summary>Dans quelle région peut-on rechercher des profils ?<span>+</span></summary><p>Kairos commence en Île-de-France. La recherche peut être précisée par département, ville et arrondissement pour Paris.</p></details></div></section>
+            <section class="form-panel" data-panel="0">
+              <div class="form-heading">
+                <p class="eyebrow">FAISONS CONNAISSANCE</p>
+                <h2>Qui êtes-vous ?</h2>
+                <p>Les champs avec un * sont nécessaires.</p>
+              </div>
+
+              <fieldset class="role-picker">
+                <legend>Votre rôle sur Kairos *</legend>
+
+                <label>
+                  <input type="radio" name="role" value="founder" required>
+                  <span>
+                    <strong>Apporteur d’idée</strong>
+                    <small>J’ai un projet à développer.</small>
+                  </span>
+                </label>
+
+                <label>
+                  <input type="radio" name="role" value="partner" required>
+                  <span>
+                    <strong>Futur associé</strong>
+                    <small>Je veux rejoindre un projet.</small>
+                  </span>
+                </label>
+
+                <label>
+                  <input type="radio" name="role" value="investor" required>
+                  <span>
+                    <strong>Investisseur</strong>
+                    <small>Je souhaite soutenir des projets.</small>
+                  </span>
+                </label>
+              </fieldset>
+
+              <div class="form-grid">
+                <label class="field">
+                  Prénom *
+                  <input name="firstName" autocomplete="given-name" maxlength="60" required>
+                </label>
+
+                <label class="field">
+                  Nom *
+                  <input name="lastName" autocomplete="family-name" maxlength="80" required>
+                </label>
+
+                <label class="field">
+                  Âge *
+                  <input name="age" type="number" min="1" max="120" step="1" required>
+                  <small>Privé par défaut.</small>
+                </label>
+
+                <label class="field">
+                  Adresse e-mail *
+                  <input name="email" type="email" autocomplete="email" maxlength="254" required>
+                  <small>Jamais affichée publiquement.</small>
+                </label>
+
+                <label class="field wide">
+                  Votre présentation en une phrase
+                  <input name="headline" maxlength="120" placeholder="Votre métier, votre envie, votre idée…">
+                </label>
+
+                <label class="field wide">
+                  Parlez-nous de vous *
+                  <textarea name="bio" rows="4" maxlength="1000" required></textarea>
+                </label>
+
+                <label class="field wide">
+                  Photo de profil — facultative
+                  <input id="profile-photo" type="file" accept="image/jpeg,image/png,image/webp">
+                  <small>JPG, PNG ou WebP · 1 Mo maximum.</small>
+                </label>
+              </div>
+
+              <button class="text-link" id="remove-photo" type="button" hidden>
+                Retirer ma photo
+              </button>
+              <p class="form-status" id="photo-status" role="status"></p>
+            </section>
+
+            <section class="form-panel" data-panel="1" hidden>
+              <div class="form-heading">
+                <p class="eyebrow">VOTRE PARCOURS</p>
+                <h2>Ce que vous avez à partager.</h2>
+                <p>Vos expériences et vos savoir-faire comptent aussi.</p>
+              </div>
+
+              <div class="form-grid">
+                <label class="field">
+                  Votre situation *
+                  <select name="professionalStatus" data-catalog="statuses" required>
+                    <option value="">Choisir une situation</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Niveau d’études
+                  <select name="educationLevel" data-catalog="education">
+                    <option value="">Facultatif</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Domaine d’études
+                  <select name="studyField" data-catalog="studyFields">
+                    <option value="">Facultatif</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  École ou établissement
+                  <input name="school" maxlength="150">
+                  <small>Cette information reste privée.</small>
+                </label>
+
+                <label class="field">
+                  Expérience
+                  <select name="experience" data-catalog="experience">
+                    <option value="">Choisir</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Disponibilité *
+                  <select name="availability" data-catalog="availability" required>
+                    <option value="">Choisir</option>
+                  </select>
+                </label>
+              </div>
+
+              <fieldset class="choice-fieldset">
+                <legend>Vos domaines de travail ou de compétence *</legend>
+                <p>Choisissez au moins un domaine.</p>
+                <div class="choices" id="work-choices"></div>
+                <p id="work-error" class="error-text" hidden>
+                  Choisissez au moins un domaine.
+                </p>
+              </fieldset>
+
+              <label class="field">
+                Vos compétences précises
+                <input name="skills" maxlength="300" placeholder="Ex. développement web, vente B2B, design…">
+              </label>
+            </section>
+
+            <section class="form-panel" data-panel="2" hidden>
+              <div class="form-heading">
+                <p class="eyebrow">VOS ENVIES</p>
+                <h2>Qu’aimeriez-vous construire ?</h2>
+                <p>Une idée en cours ou l’envie de rejoindre une équipe.</p>
+              </div>
+
+              <div class="form-grid">
+                <label class="field">
+                  Secteur qui vous intéresse *
+                  <select name="projectCategory" data-catalog="sectors" required>
+                    <option value="">Choisir un secteur</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Avancement ou situation *
+                  <select name="projectStage" data-catalog="stages" required>
+                    <option value="">Choisir</option>
+                  </select>
+                </label>
+
+                <label class="field wide">
+                  Nom ou type de projet
+                  <input name="projectTitle" maxlength="120">
+                </label>
+
+                <label class="field wide">
+                  Votre projet ou votre envie *
+                  <textarea name="projectDescription" rows="4" maxlength="1500" required></textarea>
+                </label>
+
+                <label class="field">
+                  Collaboration recherchée *
+                  <select name="collaborationType" data-catalog="collaborations" required>
+                    <option value="">Choisir</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Vous aimeriez rencontrer
+                  <select name="lookingFor" data-catalog="lookingFor">
+                    <option value="">Choisir un profil</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="form-subheading">
+                <h3>Où êtes-vous ?</h3>
+                <p>Kairos commence en Île-de-France.</p>
+              </div>
+
+              <div class="form-grid">
+                <label class="field">
+                  Région
+                  <select name="region">
+                    <option value="ile-de-france">Île-de-France</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Département *
+                  <select name="department" id="department" data-catalog="departments" required>
+                    <option value="">Choisir</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Ville *
+                  <input name="city" autocomplete="address-level2" maxlength="100" required>
+                </label>
+
+                <label class="field" id="arrondissement-field" hidden>
+                  Arrondissement
+                  <select name="arrondissement" data-catalog="arrondissements" disabled>
+                    <option value="">Facultatif</option>
+                  </select>
+                </label>
+              </div>
+
+              <div id="investor-fields" hidden>
+                <div class="form-subheading">
+                  <h3>Vos préférences d’investissement</h3>
+                  <p>Vous choisissez ensuite ce que vous souhaitez afficher.</p>
+                </div>
+
+                <fieldset class="choice-fieldset">
+                  <legend>Tranches d’investissement envisagées</legend>
+                  <div class="choices" id="investment-choices"></div>
+                </fieldset>
+
+                <label class="field">
+                  Secteurs dans lesquels investir
+                  <input name="investmentSectors" maxlength="300">
+                </label>
+
+                <label class="field">
+                  Types de projets qui vous intéressent
+                  <textarea name="investmentProjectTypes" maxlength="500" rows="3"></textarea>
+                </label>
+
+                <label class="field">
+                  Montant envisagé — facultatif
+                  <input name="investmentAmount" maxlength="80">
+                </label>
+
+                <label class="check-line">
+                  <input name="showInvestmentIntent" type="checkbox">
+                  <span>Afficher publiquement mon intention d’investir.</span>
+                </label>
+
+                <label class="check-line">
+                  <input name="showInvestmentAmount" type="checkbox" disabled>
+                  <span>Afficher aussi mon montant et mes tranches d’investissement.</span>
+                </label>
+              </div>
+            </section>
+
+            <section class="form-panel" data-panel="3" hidden>
+              <div class="form-heading">
+                <p class="eyebrow">VOTRE FICHE</p>
+                <h2>Prêt à faire connaissance.</h2>
+                <p>Relisez votre présentation et choisissez votre visibilité.</p>
+              </div>
+
+              <dl id="review" class="review"></dl>
+
+              <div class="privacy-note">
+                Votre nom complet, votre e-mail et votre établissement
+                restent privés. La fiche publique utilise votre prénom
+                et l’initiale de votre nom.
+              </div>
+
+              <label class="check-line">
+                <input name="showAge" type="checkbox">
+                <span>Afficher mon âge sur ma future fiche publique.</span>
+              </label>
+
+              <label class="check-line">
+                <input name="publicConsent" type="checkbox">
+                <span>
+                  J’accepte que ma fiche soit présentée dans le futur
+                  répertoire des personnes préinscrites. Ce choix est facultatif.
+                </span>
+              </label>
+
+              <label class="check-line">
+                <input name="consent" type="checkbox" required>
+                <span>
+                  J’accepte que Kairos utilise ces informations pour traiter
+                  ma préinscription et me contacter au sujet de l’ouverture.
+                  Je peux demander leur suppression à
+                  <a href="mailto:kairos.contact01@gmail.com">
+                    kairos.contact01@gmail.com
+                  </a>. *
+                </span>
+              </label>
+
+              <p id="selected-offer" class="small-note" hidden></p>
+              <div id="registration-feedback" class="form-status" role="status"></div>
+
+              <p class="small-note">
+                La création d’un compte ne confirme pas l’envoi de votre fiche.
+                Aucun abonnement n’est souscrit ici.
+              </p>
+            </section>
+
+            <div class="form-actions">
+              <button class="button button-outline" id="previous" type="button" hidden>
+                ← Précédent
+              </button>
+
+              <button class="button" id="next" type="button">
+                Continuer →
+              </button>
+
+              <button class="button" id="submit-registration" type="submit" hidden>
+                Envoyer ma préinscription ↗
+              </button>
+            </div>
+
+            <div class="draft-actions">
+              <button class="text-link" id="save-draft" type="button">
+                Garder mon brouillon
+              </button>
+              <button class="text-link" id="export-draft" type="button">
+                Télécharger ma fiche
+              </button>
+              <p class="small-note" id="draft-status" role="status">
+                Rien n’est conservé automatiquement sur cet appareil.
+              </p>
+            </div>
+          </form>
+        </div>
+
+        <aside class="preview-sidebar">
+          <p class="eyebrow">VOTRE APERÇU PRIVÉ</p>
+          <div id="profile-preview"></div>
+          <p class="small-note">
+            Cet aperçu n’est pas publié.
+            Les likes et favoris s’appliquent aux profils du répertoire.
+          </p>
+        </aside>
+      </div>
+
+      <section class="success-panel" id="registration-success" hidden tabindex="-1">
+        <p class="eyebrow">DEMANDE REÇUE</p>
+        <h2>Votre préinscription<br><em>est bien reçue.</em></h2>
+        <p>
+          Votre fiche a été enregistrée.
+          L’équipe Kairos vous recontactera à propos de l’ouverture.
+        </p>
+        <a class="button" href="#profils">Voir l’espace profils ↗</a>
+      </section>
+    </section>
+
+    <!-- PROFILS -->
+    <section class="page-section wrap" id="page-directory" data-page hidden>
+      <div class="page-heading">
+        <p class="eyebrow">LES RENCONTRES SE PRÉPARENT</p>
+        <h1>Des profils.<br><em>Des projets en commun.</em></h1>
+        <p>
+          Découvrez les fiches publiées avec l’accord de leurs auteurs.
+          Le répertoire s’ouvrira avec le service.
+        </p>
+      </div>
+
+      <div class="directory-note">
+        <strong>Liste d’attente</strong>
+        <p>
+          Votre brouillon reste privé et n’apparaît pas dans les résultats.
+        </p>
+        <a class="text-link" href="#inscription">Préparer mon profil ↗</a>
+      </div>
+
+      <form class="directory-filters" id="directory-filters">
+        <label class="field">
+          Type de profil
+          <select name="role">
+            <option value="">Tous les profils</option>
+            <option value="founder">Apporteur d’idée</option>
+            <option value="partner">Futur associé</option>
+            <option value="investor">Investisseur</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Domaine de travail
+          <select name="workField" data-catalog="workFields">
+            <option value="">Tous les domaines</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Département
+          <select name="department" data-catalog="departments">
+            <option value="">Toute l’Île-de-France</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Ville
+          <input name="city" maxlength="100" placeholder="Toutes les villes">
+        </label>
+
+        <button class="button" type="submit">Filtrer</button>
+      </form>
+
+      <div class="directory-toolbar">
+        <p id="directory-count" role="status">Aucun profil public disponible</p>
+        <button class="text-link" id="only-favorites" type="button" aria-pressed="false">
+          Mes favoris <span id="favorites-count">0</span>
+        </button>
+      </div>
+
+      <p id="directory-status" class="small-note" role="status"></p>
+      <div id="directory-results" class="profiles-grid"></div>
+    </section>
   </main>
-  <footer class="site-footer"><div class="page-width"><div class="footer-main"><div class="footer-brand"><img src="assets/kairos-logo.png" alt="Logo Kairos" width="130" height="130" loading="lazy"><p>L’entrepreneuriat commence<br>par une rencontre.</p></div><div class="footer-links"><a href="#concept">Le concept</a><a href="#offres">Les tarifs</a><a href="#previsions">À venir</a><a href="mailto:kairos.contact01@gmail.com">Nous écrire ↗</a></div></div><div class="footer-bottom"><span>© 2026 Kairos</span><span>Paris & Île-de-France</span><a href="#accueil">Retour en haut ↑</a></div></div></footer>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>L’entrepreneuriat commence<br><em>par une rencontre.</em></p>
+
+      <div>
+        <a href="#concept">Le concept</a>
+        <a href="#offres">Les tarifs</a>
+        <a href="mailto:kairos.contact01@gmail.com">Nous écrire ↗</a>
+      </div>
+
+      <small>© 2026 Kairos · Paris & Île-de-France</small>
+    </div>
+  </footer>
+
+  <dialog id="profile-dialog" class="profile-dialog">
+    <div class="dialog-header">
+      <span>Profil Kairos</span>
+      <button id="close-dialog" type="button" aria-label="Fermer le profil">×</button>
+    </div>
+    <div id="profile-detail"></div>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="config.js" defer></script><script src="script.js" defer></script>
 </body>
 </html>
