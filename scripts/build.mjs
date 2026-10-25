@@ -7,8 +7,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(root, 'public');
 await mkdir(output, { recursive: true });
 // Only this allowlist is public. Server code, environment files and SQL stay private.
-const pages = ['index.html', 'inscription.html', 'mon-profil.html', 'profils.html', 'confidentialite.html'];
-for (const name of [...pages, 'style.css', 'script.js', 'logo-kairos.png']) {
+const pages = ['index.html', 'inscription.html', 'mon-profil.html', 'profils.html', 'confidentialite.html', 'admin.html'];
+for (const name of [...pages, 'style.css', 'script.js', 'admin.js', 'logo-kairos.png']) {
   await copyFile(resolve(root, name), resolve(output, name));
 }
 let config = await readFile(resolve(root, 'config.js'), 'utf8');
@@ -20,10 +20,10 @@ if (key) {
 await writeFile(resolve(output, 'config.js'), config);
 // New asset URLs prevent an older cached controller from displaying obsolete banners.
 const versions = {};
-for (const name of ['style.css', 'script.js', 'config.js']) versions[name] = createHash('sha256').update(await readFile(resolve(output, name))).digest('hex').slice(0, 12);
+for (const name of ['style.css', 'script.js', 'config.js', 'admin.js']) versions[name] = createHash('sha256').update(await readFile(resolve(output, name))).digest('hex').slice(0, 12);
 for (const name of pages) {
   let html = await readFile(resolve(output, name), 'utf8');
-  html = html.replace(/(href|src)="(style\.css|script\.js|config\.js)(?:\?[^"\s]*)?"/g, (_, attr, asset) => `${attr}="${asset}?v=${versions[asset]}"`);
+  html = html.replace(/(href|src)="(style\.css|script\.js|config\.js|admin\.js)(?:\?[^"\s]*)?"/g, (_, attr, asset) => `${attr}="${asset}?v=${versions[asset]}"`);
   await writeFile(resolve(output, name), html);
 }
 console.log('Kairos: les pages et fichiers publics sont prêts.');
