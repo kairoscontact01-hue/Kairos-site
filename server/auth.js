@@ -34,3 +34,15 @@ export async function verifiedEmail(userId, requested) {
   if (!email) throw new HttpError(422, 'EMAIL_NOT_VERIFIED', 'Utilisez une adresse e-mail vérifiée dans votre compte Clerk. Vous pouvez la vérifier dans les paramètres de votre compte.');
   return email.emailAddress.toLowerCase();
 }
+
+export async function administrator(request) {
+  const userId = await account(request);
+  const allowed = (process.env.KAIROS_ADMIN_EMAILS || '').split(',').map(value => value.trim().toLowerCase()).filter(Boolean);
+  if (!allowed.length) throw new HttpError(403, 'ADMIN_ONLY', 'Cet espace est réservé à l’équipe Kairos autorisée.');
+  const user = await clerk().users.getUser(userId);
+  const primary = user.emailAddresses.find(item => item.id === user.primaryEmailAddressId);
+  if (primary?.verification?.status !== 'verified' || !allowed.includes(primary.emailAddress.toLowerCase())) {
+    throw new HttpError(403, 'ADMIN_ONLY', 'Cet espace est réservé à l’équipe Kairos autorisée. Connectez-vous avec votre compte administrateur vérifié.');
+  }
+  return userId;
+}
