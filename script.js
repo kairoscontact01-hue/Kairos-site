@@ -227,7 +227,7 @@
         event.preventDefault(); audience(tabs[next].dataset.audience, true);
       });
     });
-    document.querySelectorAll("[data-register], [data-interest-plan]").forEach((control) => control.addEventListener("click", (event) => { event.preventDefault(); close(); navigateToRegistration(control.dataset.role, control.dataset.interestPlan); }));
+    document.querySelectorAll("[data-register]").forEach((control) => control.addEventListener("click", (event) => { event.preventDefault(); close(); navigateToRegistration(control.dataset.role); }));
   }
   function initRegistration() {
     const form = byId("registration-form"); form.noValidate = true;
@@ -235,6 +235,8 @@
     const params = new URLSearchParams(location.search);
     byId("retry-account")?.addEventListener("click", () => location.reload());
     if (Object.hasOwn(PLANS, params.get("offre"))) selectedPlan = params.get("offre");
+    const offer = byId("selected-offer");
+    if (offer && selectedPlan) { offer.hidden = false; offer.textContent = `Offre qui vous intéresse : ${PLANS[selectedPlan]}. Essai de quatre semaines prévu au lancement. Vous rejoignez la liste d’attente : aucun paiement ni abonnement n’est activé.`; }
     if (["founder", "partner", "investor"].includes(params.get("role"))) form.querySelector(`[name="role"][value="${params.get("role")}"]`).checked = true;
     function draft() {
       const fd = new FormData(form); const value = Object.fromEntries(fd.entries()); value.workFields = fd.getAll("workFields"); value.investmentRanges = fd.getAll("investmentRanges");
