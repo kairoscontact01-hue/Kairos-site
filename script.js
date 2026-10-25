@@ -64,7 +64,7 @@
   function publicRecord(raw) {
     if (!raw || raw.published !== true || raw.publicConsent !== true || typeof raw.id !== "string" || !raw.publicProfile) return null;
     const p = raw.publicProfile;
-    const r = { id: raw.id.slice(0, 150), preview: false, role: Object.hasOwn(ROLES, p.role) ? p.role : "member", workFields: list(p.workFields, CATALOGS.workFields), photoUrl: safePhoto(p.photoUrl), likesCount: Number.isSafeInteger(raw.likesCount) && raw.likesCount >= 0 ? raw.likesCount : 0, canLike: raw.canLike === true };
+    const r = { id: raw.id.slice(0, 150), preview: false, role: Object.hasOwn(ROLES, p.role) ? p.role : "member", workFields: list(p.workFields, CATALOGS.workFields), photoUrl: safePhoto(p.photoUrl), likesCount: Number.isSafeInteger(raw.likesCount) && raw.likesCount >= 0 ? raw.likesCount : 0, canLike: raw.canLike === true, likedByMe: raw.likedByMe === true };
     ["displayName", "headline", "bio", "education", "professionalStatus", "experience", "availability", "skills", "city", "department", "arrondissement", "projectTitle", "projectCategory", "projectStage", "projectDescription", "collaborationType", "lookingFor", "investmentSectors", "investmentProjectTypes", "investmentAmount"].forEach((key) => { r[key] = text(p[key]); });
     r.age = validAge(p.age) ? Number(p.age) : ""; r.investmentRanges = list(p.investmentRanges, CATALOGS.investmentRanges); return r;
   }
@@ -94,15 +94,21 @@
   function storedDraft() { const value = storageRead(DRAFT_KEY, null); return value?.version === 1 && value.profile ? cleanDraft(value.profile) : null; }
   function navigateToRegistration(role = "", plan = "") { const q = new URLSearchParams(); if (Object.hasOwn(ROLES, role)) q.set("role", role); if (Object.hasOwn(PLANS, plan)) q.set("offre", plan); location.href = `inscription.html${q.size ? `?${q}` : ""}`; }
   async function fetchJSON(path, options) {
-    if (location.protocol === "file:" && !apiBase) throw new Error("not-connected");
+    if (location.protocol === "file:" && !apiBase) throw new Error("Ouvrez le site déployé sur Vercel pour envoyer votre fiche. Un fichier ouvert sur votre ordinateur ne peut pas enregistrer l’inscription.");
     const headers = new Headers(options?.headers || {});
     if (clerkClient?.session) {
       const token = await clerkClient.session.getToken();
       if (token) headers.set("Authorization", `Bearer ${token}`);
     }
     const response = await fetch(`${apiBase}${path}`, { credentials: "same-origin", ...options, headers });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    if (!response.headers.get("content-type")?.includes("application/json")) throw new Error("Unexpected response"); return response.json();
+    const isJSON = response.headers.get("content-type")?.includes("application/json");
+    const data = isJSON ? await response.json() : null;
+    if (!response.ok || !isJSON) {
+      const fallback = response.status === 404 ? "Le service d’inscription manque sur ce déploiement. L’équipe Kairos doit publier les fichiers serveur sur Vercel." : "Le serveur n’a pas confirmé votre demande. Conservez votre brouillon et réessayez plus tard.";
+      const error = new Error(text(data?.error?.message, 400) || fallback);
+      error.status = response.status; error.code = data?.error?.code; throw error;
+    }
+    return data;
   }
   function fillCatalogs() {
     document.querySelectorAll("select[data-catalog]").forEach((select) => { (CATALOGS[select.dataset.catalog] || []).forEach((item) => { const [value, label] = Array.isArray(item) ? item : [item, item]; const option = el("option", "", label); option.value = value; select.append(option); }); });
@@ -121,8 +127,8 @@
     const title = el(p.preview ? "h3" : "button", "member-name", p.displayName + (p.age ? `, ${p.age} ans` : "")); if (!p.preview) { title.type = "button"; title.dataset.openProfile = p.id; }
     content.append(title, el("p", "member-city", [p.city, p.department].filter(Boolean).join(" · ") || "Ville à préciser"), el("p", "member-headline", p.headline || p.projectTitle || "Votre présentation en quelques mots"));
     const tags = el("div", "member-tags"); (p.workFields.length ? p.workFields.slice(0, 3) : ["Compétences à préciser"]).forEach((skill) => tags.append(el("span", "", skill)));
-    const bottom = el("div", "member-card-bottom"); const like = el("button", "member-like", p.preview ? "♡ J’aime" : `♡ ${p.likesCount}`); like.type = "button"; like.dataset.likeProfile = p.id; like.setAttribute("aria-label", p.preview ? "Likes disponibles à l’ouverture" : `Aimer le profil de ${p.displayName}, ${p.likesCount} likes`);
-    if (p.preview || !p.canLike) { like.disabled = true; like.title = "Les likes seront ouverts avec les comptes"; }
+    const bottom = el("div", "member-card-bottom"); const like = el("button", "member-like", p.preview ? "♡ J’aime" : `${p.likedByMe ? "♥" : "♡"} ${p.likesCount}`); like.type = "button"; like.dataset.likeProfile = p.id; like.setAttribute("aria-label", p.preview ? "Likes disponibles à l’ouverture" : `${p.likedByMe ? "Retirer mon like du" : "Aimer le"} profil de ${p.displayName}, ${p.likesCount} likes`); like.setAttribute("aria-pressed", String(Boolean(p.likedByMe)));
+    if (p.preview || !p.canLike) { like.disabled = true; like.title = p.preview ? "Aperçu privé" : "Connectez-vous pour aimer ce profil"; }
     bottom.append(like, el("span", "member-stage", p.preview ? "Aperçu privé" : "Sur liste d’attente")); content.append(tags, bottom); card.append(visual, content); return card;
   }
   function initHeader() {
@@ -140,10 +146,14 @@
     return close;
   }
   async function initAccounts() {
+    function unavailable(message) {
+      const panel = byId("account-connection");
+      if (panel) { panel.hidden = false; panel.querySelector(".account-actions").hidden = true; byId("account-status").textContent = message; }
+    }
     const key = typeof publicConfig.clerkPublishableKey === "string" ? publicConfig.clerkPublishableKey.trim() : "";
-    if (!key) return;
+    if (!key) { unavailable("La connexion au compte n’est pas encore configurée. Vous pouvez préparer un brouillon ; l’envoi nécessite une connexion Clerk."); return; }
     const domain = clerkDomain(key);
-    if (!domain) { console.warn("Clerk: la clé publique de config.js est invalide."); return; }
+    if (!domain) { unavailable("La clé publique Clerk du site est invalide. L’équipe Kairos doit vérifier sa configuration."); return; }
     const loadScript = (src, publishableKey) => new Promise((resolve, reject) => {
       const script = document.createElement("script"); script.src = src; script.async = true; script.crossOrigin = "anonymous";
       if (publishableKey) script.dataset.clerkPublishableKey = publishableKey;
@@ -157,7 +167,7 @@
       await clerkClient.load({ ui: { ClerkUI: window.__internal_ClerkUICtor }, appearance: { variables: { colorPrimary: getComputedStyle(document.documentElement).getPropertyValue("--ink").trim(), borderRadius: "2px" } } });
       document.querySelector(".site-header")?.classList.add("accounts-enabled");
       const panel = byId("account-connection"), userButton = byId("clerk-user-button");
-      let mounted = false;
+      let mounted = false, previousUserId;
       function syncAccount() {
         const user = clerkClient.user;
         document.querySelectorAll(".header-account").forEach((button) => { button.hidden = Boolean(user); });
@@ -178,6 +188,8 @@
           const introduction = document.querySelector(".registration-intro > p:last-child");
           if (introduction) introduction.textContent = "Préparez votre fiche pour Kairos. La création d’un compte ne confirme pas l’envoi de votre préinscription et ne déclenche aucun paiement.";
         }
+        const userId = user?.id || null;
+        if (userId !== previousUserId) { previousUserId = userId; document.dispatchEvent(new CustomEvent("kairos-account", { detail: { userId } })); }
       }
       clerkClient.addListener(syncAccount); syncAccount();
       document.querySelectorAll("[data-account]").forEach((button) => button.addEventListener("click", () => {
@@ -186,6 +198,7 @@
       }));
     } catch {
       clerkClient = null;
+      unavailable("La connexion au compte n’a pas pu démarrer. Rechargez la page ou réessayez plus tard. Vous pouvez garder votre brouillon en attendant.");
       console.warn("Clerk n’a pas pu démarrer. Vérifiez config.js et les domaines autorisés de votre application.");
     }
   }
@@ -255,12 +268,29 @@
       } catch { status.textContent = "Cette image n’a pas pu être lue. Essayez une autre photo."; }
     });
     byId("remove-photo").addEventListener("click", () => { photoUrl = ""; byId("profile-photo").value = ""; byId("remove-photo").hidden = true; byId("photo-status").textContent = "Photo retirée de votre fiche."; update(); });
-    function restore() {
-      const data = storedDraft(); if (!data) return;
+    function applyProfile(data) {
       Object.entries(data).forEach(([name, value]) => { const fields = [...form.querySelectorAll("[name]")].filter((field) => field.name === name); fields.forEach((field) => { if (field.type === "checkbox") field.checked = Array.isArray(value) ? value.includes(field.value) : value === true; else if (field.type === "radio") field.checked = field.value === value; else if (field.type !== "file") field.value = value; }); });
       photoUrl = data.photoUrl; selectedPlan = data.plan || selectedPlan; byId("remove-photo").hidden = !photoUrl; form.elements.consent.checked = false;
-      byId("draft-status").textContent = "Brouillon récupéré. Vérifiez vos informations et confirmez votre consentement avant l’envoi."; showStep(0);
+      showStep(0);
     }
+    function restore() {
+      const data = storedDraft(); if (!data) return; applyProfile(data);
+      byId("draft-status").textContent = "Brouillon récupéré. Vérifiez vos informations et confirmez votre consentement avant l’envoi.";
+    }
+    const resume = el("button", "text-link", "Reprendre ma fiche enregistrée →"); resume.type = "button"; resume.hidden = true;
+    byId("account-connection")?.append(resume);
+    document.addEventListener("kairos-account", (event) => { resume.hidden = !event.detail.userId; });
+    resume.addEventListener("click", async () => {
+      resume.disabled = true;
+      try {
+        const result = await fetchJSON("/api/waitlist");
+        if (!result.profile) { toast("Aucune fiche n’est encore enregistrée pour ce compte."); return; }
+        document.querySelector(".registration-layout").hidden = false; byId("registration-success").hidden = true;
+        applyProfile(cleanDraft(result.profile));
+        byId("draft-status").textContent = "Fiche enregistrée récupérée. Vérifiez vos informations avant de confirmer sa mise à jour.";
+      } catch (error) { toast(error.message || "La fiche n’a pas pu être récupérée."); }
+      finally { resume.disabled = false; }
+    });
     byId("draft-banner").hidden = !storedDraft(); byId("restore-draft").addEventListener("click", restore);
     byId("delete-draft").addEventListener("click", () => { try { localStorage.removeItem(DRAFT_KEY); byId("draft-banner").hidden = true; byId("draft-status").textContent = "Le brouillon conservé sur cet appareil a été supprimé."; } catch { toast("Le brouillon n’a pas pu être supprimé."); } });
     byId("save-draft").addEventListener("click", () => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), profile: draft() })); byId("draft-banner").hidden = false; byId("draft-status").textContent = "Brouillon conservé uniquement sur cet appareil. Cette action ne vous inscrit pas auprès de Kairos."; } catch { byId("draft-status").textContent = "Le navigateur ne permet pas de garder ce brouillon. Vous pouvez télécharger votre fiche."; } });
@@ -275,11 +305,18 @@
       event.preventDefault(); for (let i = 0; i < panels.length; i++) if (!validatePanel(i)) return;
       const data = draft(); const feedback = byId("registration-feedback"), submit = byId("submit-registration"); submit.disabled = true; feedback.classList.remove("error"); feedback.textContent = "Envoi de votre demande…";
       try {
+        await accountsReady;
+        if (!clerkClient?.session) {
+          if (clerkClient) clerkClient.openSignIn();
+          throw new Error(clerkClient ? "Connectez-vous ou créez votre compte dans la fenêtre qui s’ouvre, puis cliquez à nouveau sur Envoyer. Votre saisie reste dans ce formulaire." : "La connexion au compte n’est pas disponible. Gardez votre brouillon ; l’équipe Kairos doit vérifier la configuration Clerk.");
+        }
         // Server must validate consent, persist the request, and only then return { registered: true }.
         const result = await fetchJSON("/api/waitlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...data, source: "profile-pre-registration", submittedAt: new Date().toISOString() }) });
         if (result.registered !== true && result.status !== "registered") throw new Error("Registration not confirmed");
+        const messages = { sent: "Un e-mail de confirmation vous a été envoyé.", test_sent: "Le site utilise encore le mode de test Resend : l’e-mail a été envoyé uniquement à l’équipe Kairos. Votre fiche est bien enregistrée.", pending: "Votre fiche est bien enregistrée. L’envoi de l’e-mail n’a pas encore été confirmé.", not_configured: "Votre fiche est bien enregistrée. Les e-mails de confirmation ne sont pas encore activés." };
+        byId("registration-success").querySelector("p:not(.eyebrow)").textContent = `Vous rejoignez la liste d’attente Kairos. ${messages[result.notification] || "Votre fiche est bien enregistrée."} Aucun paiement n’a été déclenché.`;
         document.querySelector(".registration-layout").hidden = true; byId("draft-banner").hidden = true; byId("registration-success").hidden = false; byId("registration-success").focus();
-      } catch { feedback.classList.add("error"); feedback.textContent = "L’envoi à Kairos n’est pas encore disponible ou n’a pas pu être confirmé. Vous n’avez pas de confirmation de préinscription. Gardez votre brouillon sur cet appareil ou téléchargez votre fiche pour la reprendre plus tard."; }
+      } catch (error) { feedback.classList.add("error"); feedback.textContent = `${error.message || "L’envoi n’a pas pu être confirmé."} Vous pouvez garder votre brouillon sur cet appareil.`; if (error.status === 401) clerkClient?.openSignIn(); }
       finally { submit.disabled = false; }
     });
     if (params.get("reprendre") === "1" && storedDraft()) restore(); else showStep(0, false);
@@ -336,17 +373,24 @@
       if (save) { const id = save.dataset.saveProfile; if (!profiles.some((p) => p.id === id)) return; const previous = favoriteIds.has(id); if (previous) favoriteIds.delete(id); else favoriteIds.add(id); if (!saveFavorites()) { if (previous) favoriteIds.add(id); else favoriteIds.delete(id); } render(); }
       if (open) { const p = profiles.find((item) => item.id === open.dataset.openProfile); if (p) openProfile(p); }
       if (like) { const p = profiles.find((item) => item.id === like.dataset.likeProfile); if (!p?.canLike) return; like.disabled = true;
-        try { const result = await fetchJSON(`/api/waitlist/profiles/${encodeURIComponent(p.id)}/like`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "toggle" }) }); if (!Number.isSafeInteger(result.likesCount) || result.likesCount < 0) throw new Error("Invalid count"); p.likesCount = result.likesCount; render(); }
+        try { const result = await fetchJSON(`/api/waitlist/profiles/${encodeURIComponent(p.id)}/like`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ liked: !p.likedByMe }) }); if (!Number.isSafeInteger(result.likesCount) || result.likesCount < 0 || typeof result.liked !== "boolean") throw new Error("Invalid count"); p.likesCount = result.likesCount; p.likedByMe = result.liked; render(); }
         catch { toast("Votre like n’a pas pu être confirmé. Réessayez plus tard."); like.disabled = false; }
       }
     });
     render();
-    try { const result = await fetchJSON("/api/waitlist/profiles"); if (!Array.isArray(result.profiles)) throw new Error("Invalid directory"); profiles = result.profiles.map(publicRecord).filter(Boolean); available = true; render(); } catch { render(); }
+    let loadGeneration = 0;
+    async function load() {
+      const generation = ++loadGeneration;
+      try { const result = await fetchJSON("/api/waitlist/profiles"); if (!Array.isArray(result.profiles)) throw new Error("Invalid directory"); if (generation !== loadGeneration) return; profiles = result.profiles.map(publicRecord).filter(Boolean); available = true; render(); }
+      catch { if (generation === loadGeneration) { profiles = []; available = false; render(); } }
+    }
+    document.addEventListener("kairos-account", load);
+    await accountsReady; await load();
   }
   fillCatalogs();
   const closeHeader = initHeader();
+  const accountsReady = initAccounts();
   if (page === "landing") initLanding();
   if (page === "registration") initRegistration();
   if (page === "directory") initDirectory();
-  initAccounts();
 })();

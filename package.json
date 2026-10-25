@@ -1,0 +1,16 @@
+{
+  "name": "kairos",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "@clerk/backend": "3.26.2",
+    "@neondatabase/serverless": "1.2.0"
+  }
+}

@@ -1,0 +1,15 @@
+export const CATALOGS = {
+    statuses: ["Étudiant·e", "Salarié·e", "Indépendant·e", "Entrepreneur·se", "En reconversion", "En recherche d’activité", "Autre"],
+    education: ["Sans diplôme / parcours autodidacte", "CAP / BEP", "Baccalauréat", "Bac +2 / BTS / BUT en cours", "Licence / Bachelor / BUT", "Master / Bac +5", "Doctorat", "Autre parcours"],
+    studyFields: ["Informatique & numérique", "Commerce & gestion", "Marketing & communication", "Design & création", "Finance & comptabilité", "Droit & sciences politiques", "Ingénierie & sciences", "Santé & social", "Éducation & sciences humaines", "Environnement & agriculture", "Artisanat & métiers manuels", "Autre / autodidacte"],
+    experience: ["Je débute", "Moins de 2 ans", "2 à 5 ans", "6 à 10 ans", "Plus de 10 ans"],
+    availability: ["Quelques heures par semaine", "Un à deux jours par semaine", "Temps partiel", "Temps plein", "À définir ensemble"],
+    workFields: ["Développement informatique", "Data & intelligence artificielle", "Design & UX/UI", "Commerce & vente", "Marketing & communication", "Gestion de produit", "Finance & comptabilité", "Stratégie & gestion", "Droit & administration", "Ingénierie & industrie", "Santé & bien-être", "Environnement & climat", "Éducation & formation", "Culture & création", "Artisanat", "Opérations & logistique", "Autre domaine"],
+    sectors: ["Technologie & numérique", "Éducation & formation", "Santé & bien-être", "Environnement & climat", "Alimentation & agriculture", "Commerce & services", "Culture & médias", "Finance & assurance", "Industrie & mobilité", "Économie sociale & solidaire", "Autre secteur", "Je suis encore en exploration"],
+    stages: ["J’explore une idée", "Je valide un besoin", "Je développe un prototype", "J’ai de premiers clients", "Mon activité est lancée", "Je cherche un projet à rejoindre", "Je souhaite investir ou accompagner"],
+    collaborations: ["Association / cofondation", "Collaboration à temps partiel", "Collaboration à temps plein", "Partenariat ponctuel", "Mission rémunérée", "Investissement & accompagnement", "Ouvert·e à en discuter"],
+    lookingFor: ["Un associé / une associée", "Un profil technique / développeur", "Un profil commercial", "Un profil design / créatif", "Un investisseur", "Un partenaire", "Une équipe à rejoindre", "Ouvert·e à plusieurs profils"],
+    departments: [["75", "75 · Paris"], ["77", "77 · Seine-et-Marne"], ["78", "78 · Yvelines"], ["91", "91 · Essonne"], ["92", "92 · Hauts-de-Seine"], ["93", "93 · Seine-Saint-Denis"], ["94", "94 · Val-de-Marne"], ["95", "95 · Val-d’Oise"]],
+    arrondissements: Array.from({ length: 20 }, (_, i) => `${i + 1}${i ? "e" : "er"} arrondissement`),
+    investmentRanges: ["Moins de 10 000 €", "10 000 € à 50 000 €", "50 000 € à 150 000 €", "Plus de 150 000 €", "À définir"],
+  };
