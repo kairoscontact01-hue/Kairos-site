@@ -7,9 +7,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const output = resolve(root, 'public');
 await mkdir(output, { recursive: true });
 // Only this allowlist is public. Server code, environment files and SQL stay private.
-const pages = ['index.html', 'inscription.html', 'mon-profil.html', 'profils.html', 'confidentialite.html', 'admin.html'];
+const pages = ['index.html', 'inscription.html', 'mon-profil.html', 'profils.html', 'confidentialite.html', 'admin.html', 'concept.html', 'offres.html', 'masterclass.html'];
 for (const name of [...pages, 'style.css', 'script.js', 'admin.js', 'logo-kairos.png']) {
-  await copyFile(resolve(root, name), resolve(output, name));
+  try {
+    await copyFile(resolve(root, name), resolve(output, name));
+  } catch (error) {
+    if (error.code === 'ENOENT') throw new Error(`Fichier du site absent : ${name}. Ajoutez ce fichier à la racine du dépôt GitHub puis relancez le déploiement.`);
+    throw error;
+  }
 }
 let config = await readFile(resolve(root, 'config.js'), 'utf8');
 const key = process.env.CLERK_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || process.env.Clerk_publishable_key;
@@ -27,3 +32,4 @@ for (const name of pages) {
   await writeFile(resolve(output, name), html);
 }
 console.log('Kairos: les pages et fichiers publics sont prêts.');
+console.log(`Pages publiées dans public/ : ${pages.join(', ')}`);
