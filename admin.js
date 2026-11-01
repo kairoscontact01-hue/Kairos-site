@@ -1,178 +1,59 @@
-(() => {
-  "use strict";
-  const app = window.KAIROS_APP;
-  if (!app) return;
-  const byId = id => document.getElementById(id);
-  const form = byId("admin-filters");
-  const results = byId("admin-results");
-  const workspace = byId("admin-workspace");
-  const access = byId("admin-access");
-  const dialog = byId("admin-detail");
-  const roles = { founder: "Apporteur d’idée", partner: "Futur associé", investor: "Investisseur" };
-  let userId, requestId = 0, detailId = 0, controller, detailController;
-  let currentPage = 0, pageCount = 1, filters = new URLSearchParams();
-  const node = (tag, className, value) => {
-    const element = document.createElement(tag);
-    if (className) element.className = className;
-    if (value !== undefined && value !== null) element.textContent = value;
-    return element;
-  };
-  const date = value => {
-    const parsed = new Date(value);
-    return Number.isFinite(parsed.getTime()) ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(parsed) : "Date non renseignée";
-  };
-  function clearDetail() {
-    detailId++;
-    detailController?.abort();
-    byId("admin-detail-content").hidden = true;
-    for (const id of ["saved-profile-card", "saved-profile-information"]) byId(id).replaceChildren();
-    for (const id of ["saved-profile-date", "saved-profile-visibility", "admin-record-reference", "admin-detail-status"]) byId(id).textContent = "";
-    byId("saved-profile-title").textContent = "Préinscription";
-  }
-  function clearPrivateData() {
-    controller?.abort();
-    requestId++;
-    if (dialog.open) dialog.close();
-    clearDetail();
-    results.replaceChildren();
-    results.setAttribute("aria-busy", "false");
-    workspace.hidden = true;
-    byId("admin-total").textContent = "0";
-    byId("admin-list-status").textContent = "";
-    byId("admin-pagination").hidden = true;
-  }
-  function accessMessage(title, message, retry = false) {
-    access.hidden = false;
-    access.setAttribute("aria-busy", "false");
-    byId("admin-access-title").textContent = title;
-    byId("admin-access-message").textContent = message;
-    byId("admin-retry").hidden = !retry;
-  }
-  function denied(error) {
-    clearPrivateData();
-    accessMessage(error.status === 401 ? "Reconnectez-vous." : "Cet espace est réservé à l’équipe.", error.status === 401 ? "Votre session a expiré. Reconnectez-vous à votre compte Kairos." : "Utilisez le compte Kairos dont l’adresse e-mail principale vérifiée a été autorisée pour l’administration. Vous pouvez changer de compte en vous déconnectant.");
-  }
-  function card(profile) {
-    const article = node("article", "admin-person");
-    const identity = node("div", "admin-person-identity");
-    const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(" ") || "Profil sans nom";
-    const initials = [profile.firstName, profile.lastName].filter(Boolean).map(name => Array.from(name)[0]).join("");
-    const visual = node("span", `admin-initials admin-role-${profile.role}`, initials || "K");
-    visual.setAttribute("aria-hidden", "true");
-    const heading = node("div");
-    heading.append(node("h2", "", fullName), node("p", "admin-person-role", roles[profile.role] || "Membre Kairos"));
-    identity.append(visual, heading);
-    const meta = node("div", "admin-person-meta");
-    meta.append(node("p", "", profile.email), node("p", "", [profile.city, profile.department].filter(Boolean).join(" · ") || "Localisation non renseignée"));
-    const project = node("div", "admin-person-project");
-    project.append(node("span", "eyebrow", "PROJET / INTÉRÊT"), node("h3", "", profile.projectTitle || profile.headline || "Projet à préciser"));
-    if (profile.sector) project.append(node("p", "", profile.sector));
-    const bottom = node("div", "admin-person-bottom");
-    const status = node("span", "admin-person-status", profile.published && profile.publicConsent ? "Publié" : profile.publicConsent ? "Publication en attente" : "Fiche privée");
-    const details = node("button", "button button-outline", "Voir la fiche");
-    details.type = "button";
-    details.setAttribute("aria-label", `Voir la fiche de ${fullName}`);
-    details.addEventListener("click", () => openDetail(profile.id));
-    bottom.append(status, details);
-    const note = node("p", "admin-person-date", `Inscrit le ${date(profile.createdAt)}${profile.hasPhoto ? " · Photo disponible" : ""}`);
-    article.append(identity, meta, project, note, bottom);
-    return article;
-  }
-  async function load(page = 0) {
-    const activeUser = app.getUserId();
-    if (!activeUser) { clearPrivateData(); return; }
-    controller?.abort();
-    controller = new AbortController();
-    const serial = ++requestId;
-    const params = new URLSearchParams(filters);
-    params.set("page", String(page));
-    results.replaceChildren();
-    results.setAttribute("aria-busy", "true");
-    byId("admin-pagination").hidden = true;
-    byId("admin-list-status").textContent = "Chargement des préinscriptions…";
-    byId("admin-refresh").disabled = true;
-    if (workspace.hidden) {
-      accessMessage("Vérification de votre accès…", "Chargement sécurisé des fiches enregistrées.");
-      access.setAttribute("aria-busy", "true");
-    }
-    try {
-      const data = await app.fetchJSON(`/api/admin/profiles?${params}`, { signal: controller.signal });
-      if (serial !== requestId || activeUser !== app.getUserId()) return;
-      if (!Array.isArray(data.profiles) || !Number.isInteger(data.total) || !Number.isInteger(data.pageSize) || data.pageSize <= 0) throw new Error("La liste reçue est incomplète. Réessayez.");
-      pageCount = Math.max(1, Math.ceil(data.total / data.pageSize));
-      if (page >= pageCount && page > 0) { await load(pageCount - 1); return; }
-      currentPage = data.page;
-      access.hidden = true;
-      workspace.hidden = false;
-      byId("admin-total").textContent = new Intl.NumberFormat("fr-FR").format(data.total);
-      byId("admin-count-label").textContent = data.total > 1 ? "préinscriptions" : "préinscription";
-      results.replaceChildren(...data.profiles.map(card));
-      byId("admin-list-status").textContent = data.total === 0 ? "Aucune fiche ne correspond à ces critères. Seules les personnes ayant envoyé leur questionnaire apparaissent ici." : `${data.profiles.length} fiche${data.profiles.length > 1 ? "s" : ""} affichée${data.profiles.length > 1 ? "s" : ""} sur ${data.total}.`;
-      byId("admin-pagination").hidden = pageCount < 2;
-      byId("admin-page-label").textContent = `Page ${currentPage + 1} sur ${pageCount}`;
-      byId("admin-previous").disabled = currentPage === 0;
-      byId("admin-next").disabled = currentPage + 1 >= pageCount;
-    } catch (error) {
-      if (serial !== requestId || activeUser !== app.getUserId() || error.name === "AbortError") return;
-      if ([401, 403].includes(error.status)) denied(error);
-      else {
-        byId("admin-list-status").textContent = "La liste n’a pas pu être actualisée. Utilisez le bouton Actualiser pour réessayer.";
-        if (workspace.hidden) accessMessage("Les fiches n’ont pas pu être chargées.", error.message || "Réessayez dans quelques instants.", true);
-      }
-    } finally {
-      if (serial === requestId) { results.setAttribute("aria-busy", "false"); byId("admin-refresh").disabled = false; access.setAttribute("aria-busy", "false"); }
-    }
-  }
-  async function openDetail(id) {
-    const activeUser = app.getUserId();
-    if (!activeUser) { clearPrivateData(); return; }
-    clearDetail();
-    const serial = detailId;
-    detailController = new AbortController();
-    byId("admin-detail-status").textContent = "Chargement de la fiche complète…";
-    dialog.showModal();
-    try {
-      const data = await app.fetchJSON(`/api/admin/profiles/${encodeURIComponent(id)}`, { signal: detailController.signal });
-      if (serial !== detailId || activeUser !== app.getUserId() || !dialog.open) return;
-      if (!data.profile) throw new Error("Cette fiche n’est pas disponible.");
-      app.renderOwnProfile(data.profile, data, "admin");
-      byId("admin-record-reference").textContent = `Inscription : ${date(data.createdAt)} · Référence : ${data.id}`;
-      byId("admin-detail-status").textContent = "";
-      byId("admin-detail-content").hidden = false;
-      byId("saved-profile-title").focus();
-    } catch (error) {
-      if (serial !== detailId || activeUser !== app.getUserId() || error.name === "AbortError") return;
-      if ([401, 403].includes(error.status)) denied(error);
-      else byId("admin-detail-status").textContent = error.message || "La fiche n’a pas pu être chargée. Fermez-la puis réessayez.";
-    }
-  }
-  function changed(nextUserId) {
-    if (nextUserId === userId) return;
-    userId = nextUserId;
-    clearPrivateData();
-    form.reset();
-    filters = new URLSearchParams();
-    currentPage = 0;
-    if (nextUserId) load(0);
-  }
-  form.addEventListener("submit", event => {
-    event.preventDefault();
-    filters = new URLSearchParams(new FormData(form));
-    filters.set("q", (filters.get("q") || "").trim());
-    load(0);
-  });
-  form.addEventListener("reset", () => { filters = new URLSearchParams(); });
-  form.querySelector('[type="reset"]').addEventListener("click", () => { form.reset(); filters = new URLSearchParams(); load(0); });
-  byId("admin-refresh").addEventListener("click", () => load(currentPage));
-  byId("admin-retry").addEventListener("click", () => load(0));
-  byId("admin-previous").addEventListener("click", () => { if (currentPage > 0) load(currentPage - 1); });
-  byId("admin-next").addEventListener("click", () => { if (currentPage + 1 < pageCount) load(currentPage + 1); });
-  byId("admin-close-detail").addEventListener("click", () => dialog.close());
-  dialog.addEventListener("close", clearDetail);
-  byId("retry-account").addEventListener("click", () => location.reload());
-  document.addEventListener("kairos-account", event => changed(event.detail.userId));
-  // Do not retain private responses in a page restored from the browser history.
-  window.addEventListener("pagehide", clearPrivateData);
-  window.addEventListener("pageshow", event => { if (event.persisted) { userId = undefined; changed(app.getUserId()); } });
-  app.ready.then(() => changed(app.getUserId()));
-})();
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#faf7f1"><title>Administration — Kairos</title><meta name="description" content="Espace privé de consultation des préinscriptions Kairos."><meta name="robots" content="noindex,nofollow"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css?v=pages-20261101"></head>
+<body id="haut" data-page="admin"><a class="skip-link" href="#contenu">Aller au contenu</a><header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="index.html" aria-label="Kairos, accueil"><img src="logo-kairos.png" alt="Kairos" width="1003" height="873"></a>
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="main-nav"><span></span><span></span></button>
+      <nav class="main-nav" id="main-nav" aria-label="Navigation principale">
+        <div class="nav-links"><a href="concept.html">Le concept</a><a href="profils.html">Découvrir</a><a href="offres.html">Les offres</a><a href="masterclass.html">Masterclass</a><a class="mobile-favorites" href="profils.html?favoris=1">Mes favoris</a></div>
+        <form class="header-search" id="header-search" action="profils.html" method="get" role="search">
+          <label class="sr-only" for="header-query">Rechercher un profil ou une compétence</label>
+          <input id="header-query" name="q" type="search" maxlength="120" placeholder="Un profil, une compétence…">
+          <button class="header-search-submit" type="submit" aria-label="Rechercher"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.5 15.5 4.5 4.5"></path></svg></button>
+        </form>
+      </nav>
+      <a class="header-favorites" href="profils.html?favoris=1" aria-label="Mes favoris"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"></path></svg></a>
+      <button class="button button-quiet header-account" type="button" data-account="sign-in" hidden>Connexion</button>
+      <div class="header-user" id="clerk-user-button" hidden></div>
+      <a class="button button-primary button-small header-register" href="inscription.html"><span data-auth-label data-signed-out="Créer mon compte" data-signed-in="Mon profil">Créer mon compte</span> </a>
+    </div>
+  </header>
+<main class="page-width admin-main" id="contenu">
+  <div class="admin-heading"><div><p class="eyebrow">ESPACE ÉQUIPE</p><h1>Les préinscriptions.</h1><p>Les personnes, leurs parcours et les projets qu’elles souhaitent construire.</p></div><a class="text-link" href="mon-profil.html">Mon profil</a></div>
+  <noscript><p>Activez JavaScript pour accéder à cet espace privé.</p></noscript>
+  <section class="account-connection" id="account-connection" aria-busy="true"><div><p class="account-step" id="account-step">CONNEXION ÉQUIPE</p><h2 id="account-title">Connectez-vous à votre compte.</h2><p id="account-status" role="status" aria-live="polite">Chargement de la connexion sécurisée…</p></div><div class="account-actions"><button class="button button-outline" type="button" data-account="sign-in" disabled>Me connecter</button></div><button type="button" class="text-link" id="retry-account" hidden>Réessayer la connexion</button></section>
+  <div id="registration-content" hidden inert>
+    <div class="own-account-actions"><button class="text-link" type="button" data-account="manage" disabled>Paramètres du compte</button><button class="text-link" type="button" data-account="sign-out" disabled>Me déconnecter</button></div>
+    <section class="admin-notice" id="admin-access" aria-busy="true"><h2 id="admin-access-title">Vérification de votre accès…</h2><p id="admin-access-message" role="status">Les fiches sont réservées à l’équipe Kairos autorisée.</p><button class="button button-outline" type="button" id="admin-retry" hidden>Réessayer</button></section>
+    <section id="admin-workspace" hidden aria-label="Préinscriptions enregistrées">
+      <div class="admin-toolbar"><div><span class="admin-count" id="admin-total">0</span><span id="admin-count-label">préinscription</span><p>Fiches enregistrées · consultation privée</p></div><button class="button button-outline" type="button" id="admin-refresh">Actualiser</button></div>
+      <form class="admin-filters" id="admin-filters" role="search">
+        <label class="admin-search">Rechercher<input type="search" name="q" maxlength="120" placeholder="Nom, e-mail ou nom du projet"></label>
+        <label>Rôle<select name="role"><option value="">Tous les rôles</option value="founder">Apporteur d’idée</option><option value="partner">Futur associé</option><option value="investor">Investisseur</option></select></label>
+        <label>Secteur<select name="sector" data-catalog="sectors"><option value="">Tous les secteurs</option></select></label>
+        <label>Département<select name="department" data-catalog="departments"><option value="">Toute l’Île-de-France</option></select></label>
+        <div class="admin-filter-actions"><button class="button button-primary" type="submit">Rechercher</button><button class="text-link" type="reset">Effacer les filtres</button></div>
+      </form>
+      <p class="admin-list-status" id="admin-list-status" role="status" aria-live="polite"></p>
+      <div class="admin-results" id="admin-results" aria-busy="false"></div>
+      <nav class="admin-pagination" aria-label="Pages de préinscriptions" id="admin-pagination" hidden><button class="button button-outline" type="button" id="admin-previous">Page précédente</button><span id="admin-page-label"></span><button class="button button-outline" type="button" id="admin-next">Page suivante</button></nav>
+      <p class="admin-privacy-note">Ces informations sont privées. Consulter une fiche ici ne la publie pas dans l’annuaire.</p>
+    </section>
+  </div>
+</main>
+<dialog class="admin-detail" id="admin-detail" aria-labelledby="saved-profile-title">
+  <div class="admin-dialog-bar"><p class="eyebrow">FICHE PRIVÉE · ÉQUIPE KAIROS</p><button class="button button-outline" type="button" id="admin-close-detail">Fermer la fiche</button></div>
+  <h2 id="saved-profile-title" tabindex="-1">Préinscription</h2>
+  <p id="admin-detail-status" role="status"></p>
+  <div id="admin-detail-content" hidden><p id="saved-profile-date" class="form-status"></p><p class="admin-record-reference" id="admin-record-reference"></p><div class="registered-layout"><aside><p class="eyebrow">PRÉSENTATION</p><div id="saved-profile-card"></div><p class="preview-note" id="saved-profile-visibility"></p></aside><div id="saved-profile-information"></div></div></div>
+</dialog>
+<footer class="site-footer">
+  <div class="page-width footer-content">
+    <div class="footer-intro"><a class="footer-name" href="index.html" aria-label="Kairos, accueil">KAIROS</a><p>Les bonnes rencontres.<br><em>Les projets de demain.</em></p><span>Paris & Île-de-France · Liste d’attente</span></div>
+    <nav class="footer-column" aria-label="Explorer Kairos"><h2>Explorer</h2><a href="concept.html">Le concept</a><a href="profils.html">Les profils</a><a href="offres.html">Les offres</a><a href="masterclass.html">Masterclass & ateliers</a></nav>
+    <nav class="footer-column" aria-label="Informations et données"><h2>Vos informations</h2><a href="admin.html" data-admin-link hidden>Administration</a><a href="confidentialite.html">Comment sont gérées mes données ?</a><a href="confidentialite.html#visibilite">La visibilité de mon profil</a><a href="confidentialite.html#vos-choix">Modifier ou supprimer mes données</a></nav>
+    <div class="footer-column" id="contact"><h2>Une question ?</h2><a class="footer-email" href="mailto:kairos.contact01@gmail.com">kairos.contact01@gmail.com </a><p>Pour parler du projet, de votre compte ou de vos données, écrivez à l’équipe Kairos.</p></div>
+    <div class="footer-utility"><small>© 2026 Kairos</small><div><a href="index.html">Retour à l’accueil</a><a href="#haut">Haut de page </a></div></div>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div><script src="config.js" defer></script><script src="script.js" defer></script><script src="admin.js" defer></script></body></html>
