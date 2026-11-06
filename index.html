@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Instrument+Serif:ital@0;1&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=pages-20261101">
+  <link rel="stylesheet" href="style.css?v=decouvrir-20261106">
 </head>
 <body id="haut" data-page="landing" class="landing-short">
   <a class="skip-link" href="#contenu">Aller au contenu</a>
@@ -36,7 +36,15 @@
       <p class="short-location"><span class="status-dot" aria-hidden="true"></span> Île-de-France · Liste d’attente</p>
       <h1 id="hero-title">Trouvez votre <em>futur associé.</em></h1>
       <p class="short-lead">Votre projet. Vos compétences. Les bonnes personnes pour entreprendre ensemble.</p>
-      <div class="short-hero-actions"><a class="button button-primary" href="inscription.html"><span data-auth-label data-signed-out="Créer mon compte" data-signed-in="Mon profil">Créer mon compte</span></a><a class="text-link" href="#offres">Voir les offres</a></div>
+      <div class="short-hero-actions"><a class="button button-primary" href="inscription.html"><span data-auth-label data-signed-out="Créer mon compte" data-signed-in="Mon profil">Créer mon compte</span></a><a class="text-link" href="profils.html">Découvrir les projets et profils</a></div>
+    </section>
+
+    <section class="home-discovery page-width" aria-labelledby="home-discovery-title">
+      <div class="discovery-section-heading"><div><p class="eyebrow">LA COMMUNAUTÉ KAIROS</p><h2 id="home-discovery-title">Les projets et les personnes.</h2></div><a class="text-link" href="profils.html">Tout découvrir</a></div>
+      <nav class="discovery-preview-links" aria-label="Explorer par catégorie"><a href="profils.html?categorie=projets">Les projets</a><a href="profils.html?categorie=profils">Les profils</a><a href="profils.html?categorie=investisseurs">Les investisseurs</a></nav>
+      <div class="member-grid home-discovery-grid" id="home-discovery-results" aria-busy="true"><p class="discovery-loading">Chargement des aperçus…</p></div>
+      <p class="discovery-footnote" id="home-discovery-status" role="status"></p>
+      <noscript><p><a href="profils.html">Ouvrir Découvrir</a> et activer JavaScript pour afficher les propositions.</p></noscript>
     </section>
 
     <section class="short-offers" id="offres" aria-labelledby="offers-title">
@@ -61,6 +69,15 @@
       </div>
     </section>
   </main>
+
+  <dialog class="discovery-gate" id="discovery-gate" aria-labelledby="discovery-gate-title">
+    <div class="discovery-gate-top"><span class="eyebrow">UN COMPTE GRATUIT</span><button type="button" id="close-discovery-gate" aria-label="Fermer cette fenêtre">×</button></div>
+    <h2 id="discovery-gate-title">Faisons connaissance.</h2>
+    <p>Créez votre compte ou connectez-vous pour consulter la fiche complète, enregistrer vos favoris et aimer les propositions.</p>
+    <div class="discovery-gate-actions"><button class="button button-primary" type="button" data-account="sign-up" disabled>Créer mon compte gratuit</button><button class="button button-outline" type="button" data-account="sign-in" disabled>J’ai déjà un compte</button></div>
+    <p class="discovery-gate-status" id="discovery-gate-status" role="status">Chargement de la connexion sécurisée…</p>
+    <a class="text-link" href="offres.html">Découvrir les offres prévues</a>
+  </dialog>
   <footer class="site-footer">
   <div class="page-width footer-content">
     <div class="footer-intro"><a class="footer-name" href="index.html" aria-label="Kairos, accueil">KAIROS</a><p>Les bonnes rencontres.<br><em>Les projets de demain.</em></p><span>Paris & Île-de-France · Liste d’attente</span></div>
@@ -71,6 +88,6 @@
   </div>
 </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="config.js" defer></script><script src="script.js?v=profil-20261025-3" defer></script>
+  <script src="config.js" defer></script><script src="script.js?v=decouvrir-20261106" defer></script>
 </body>
 </html>

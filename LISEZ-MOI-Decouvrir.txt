@@ -1,0 +1,37 @@
+KAIROS — PROJETS ET PROFILS À DÉCOUVRIR
+
+INSTALLATION
+1. Extraire le ZIP.
+2. Dans le dépôt GitHub relié à Vercel : Add file, puis Upload files.
+3. Importer TOUT le contenu extrait à la racine du dépôt, en gardant les dossiers api/, server/ et scripts/. Importer le contenu, pas le ZIP ni le dossier parent.
+4. Les fichiers de même nom et de même emplacement remplacent les anciens après Commit changes. Les autres fichiers existants restent en place.
+5. Valider tous les fichiers du lot dans le même commit : l’interface et les routes serveur vont ensemble.
+6. Attendre le déploiement Ready sur Vercel, puis ouvrir l’adresse de production : https://kairos-no-emoji-mobile.vercel.app
+
+CE QUI CHANGE
+- Visiteurs : aperçus réels de projets et profils sur l’accueil.
+- Découvrir : catégories Tout, Projets, Profils et Investisseurs, recherche et filtres.
+- Un clic sur une fiche, un like ou un favori sans compte invite à créer un compte gratuit ou à se connecter.
+- Après connexion, la fiche sélectionnée peut être retrouvée et ouverte.
+- Un membre connecté qui ouvre l’accueil arrive sur Découvrir.
+- Les fiches détaillées sont renvoyées uniquement après vérification de la session sur le serveur.
+- Le profil personnel et les données privées restent séparés des présentations publiées.
+
+IMPORTANT POUR LES PREMIÈRES FICHES
+Aucun faux projet n’a été ajouté. Une fiche doit avoir l’accord de son auteur et être validée par l’équipe pour apparaître. Si aucune fiche n’a été publiée, un message invite à préparer son profil. Les préinscriptions existantes ne sont pas automatiquement rendues publiques.
+
+LES COMPTES EXISTANTS SONT CONSERVÉS
+Le lot réutilise Clerk et le serveur de connexion existants. Aucune nouvelle clé ni base de données n’est nécessaire. Le formulaire personnel, l’enregistrement des fiches, l’administration et les envois Resend restent gérés par les services existants. Aucun paiement ni abonnement n’est activé. Les favoris restent sur l’appareil ; les likes utilisent le serveur existant. La messagerie entre membres n’est pas encore ouverte.
+
+CONTENU DU LOT
+- Pages : index.html, profils.html, concept.html, offres.html, masterclass.html, confidentialite.html.
+- Interface : script.js et style.css.
+- Liste des aperçus : api/waitlist/profiles.js.
+- Nouveau détail réservé aux membres : api/waitlist/profiles/[id].js.
+- Sélection des champs de présentation : server/discovery.js.
+- Préparation du site : scripts/build.mjs.
+- Documentation : README.md et ce fichier.
+
+Les fichiers config.js, server/auth.js, server/db.js, server/mail.js et les clés de connexion ne sont pas inclus dans ce lot. Garder les versions existantes du projet.
+
+La syntaxe des fichiers JavaScript et la préparation locale du site ont été contrôlées. Cette préparation ne confirme pas l’accès en ligne avec votre compte réel après publication.
